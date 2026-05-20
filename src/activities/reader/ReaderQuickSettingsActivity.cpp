@@ -117,6 +117,10 @@ bool ReaderQuickSettingsActivity::isImmediateRendererSetting(const QuickSetting&
          setting.valuePtr == &CrossPointSettings::textDarkness;
 }
 
+bool ReaderQuickSettingsActivity::needsImmediateRendererFullRefresh(const QuickSetting& setting) {
+  return setting.valuePtr == &CrossPointSettings::darkMode;
+}
+
 void ReaderQuickSettingsActivity::applyImmediateRendererSetting(const QuickSetting& setting) {
   if (!isImmediateRendererSetting(setting)) {
     return;
@@ -125,7 +129,9 @@ void ReaderQuickSettingsActivity::applyImmediateRendererSetting(const QuickSetti
   renderer.setDarkMode(SETTINGS.darkMode);
   renderer.setFadingFix(SETTINGS.fadingFix);
   renderer.setTextDarkness(SETTINGS.textDarkness);
-  renderer.requestNextFullRefresh();
+  if (needsImmediateRendererFullRefresh(setting)) {
+    renderer.requestNextFullRefresh();
+  }
 }
 
 void ReaderQuickSettingsActivity::onEnter() {

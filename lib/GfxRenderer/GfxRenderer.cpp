@@ -1060,20 +1060,44 @@ std::string GfxRenderer::truncatedText(const int fontId, const char* text, const
                                        const EpdFontFamily::Style style) const {
   if (!text || maxWidth <= 0) return "";
 
-  std::string item = text;
   // U+2026 HORIZONTAL ELLIPSIS (UTF-8: 0xE2 0x80 0xA6)
   const char* ellipsis = "\xe2\x80\xa6";
-  int textWidth = getTextWidth(fontId, item.c_str(), style);
+  const int textWidth = getTextWidth(fontId, text, style);
   if (textWidth <= maxWidth) {
-    // Text fits, return as is
-    return item;
+    return text;
   }
 
-  while (!item.empty() && getTextWidth(fontId, (item + ellipsis).c_str(), style) >= maxWidth) {
-    utf8RemoveLastChar(item);
+  if (getTextWidth(fontId, ellipsis, style) > maxWidth) {
+    return ellipsis;
   }
 
-  return item.empty() ? ellipsis : item + ellipsis;
+  std::vector<size_t> charEnds;
+  const auto* start = reinterpret_cast<const unsigned char*>(text);
+  const auto* cursor = start;
+  while (*cursor != '\0') {
+    utf8NextCodepoint(&cursor);
+    charEnds.push_back(static_cast<size_t>(cursor - start));
+  }
+
+  size_t low = 0;
+  size_t high = charEnds.size();
+  while (low < high) {
+    const size_t mid = low + (high - low + 1) / 2;
+    std::string candidate(text, charEnds[mid - 1]);
+    candidate += ellipsis;
+    if (getTextWidth(fontId, candidate.c_str(), style) <= maxWidth) {
+      low = mid;
+    } else {
+      high = mid - 1;
+    }
+  }
+
+  if (low == 0) {
+    return ellipsis;
+  }
+  std::string result(text, charEnds[low - 1]);
+  result += ellipsis;
+  return result;
 }
 
 std::vector<std::string> GfxRenderer::wrappedText(const int fontId, const char* text, const int maxWidth,

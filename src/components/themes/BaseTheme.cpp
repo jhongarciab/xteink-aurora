@@ -4,10 +4,12 @@
 #include <HalPowerManager.h>
 #include <HalStorage.h>
 #include <Logging.h>
+#include <Utf8.h>
 
 #include <algorithm>
 #include <cstdint>
 #include <string>
+#include <vector>
 
 #include "I18n.h"
 #include "RecentBooksStore.h"
@@ -19,6 +21,76 @@ namespace {
 constexpr int homeMenuMargin = 20;
 constexpr int homeMarginTop = 30;
 constexpr int subtitleY = 738;
+
+std::vector<int> allocateTabTextWidths(const std::vector<int>& desiredWidths, int textBudget) {
+  const int tabCount = static_cast<int>(desiredWidths.size());
+  std::vector<int> widths(tabCount, 0);
+  if (tabCount == 0 || textBudget <= 0) {
+    return widths;
+  }
+
+  std::vector<bool> fixed(tabCount, false);
+  int remainingBudget = textBudget;
+  int remainingCount = tabCount;
+  while (remainingCount > 0) {
+    const int fairWidth = std::max(0, remainingBudget / remainingCount);
+    bool fixedAny = false;
+    for (int i = 0; i < tabCount; ++i) {
+      if (!fixed[i] && desiredWidths[i] <= fairWidth) {
+        widths[i] = desiredWidths[i];
+        fixed[i] = true;
+        remainingBudget -= desiredWidths[i];
+        --remainingCount;
+        fixedAny = true;
+      }
+    }
+    if (!fixedAny) {
+      break;
+    }
+  }
+
+  if (remainingCount > 0) {
+    const int fairWidth = std::max(0, remainingBudget / remainingCount);
+    for (int i = 0; i < tabCount; ++i) {
+      if (!fixed[i]) {
+        widths[i] = fairWidth;
+      }
+    }
+  }
+  return widths;
+}
+
+std::string fitTabTextToWidth(const GfxRenderer& renderer, const int fontId, const char* text, const int maxWidth,
+                              const EpdFontFamily::Style style) {
+  if (!text || maxWidth <= 0) {
+    return {};
+  }
+  if (renderer.getTextWidth(fontId, text, style) <= maxWidth) {
+    return text;
+  }
+
+  std::vector<size_t> charEnds;
+  const auto* start = reinterpret_cast<const unsigned char*>(text);
+  const auto* cursor = start;
+  while (*cursor != '\0') {
+    utf8NextCodepoint(&cursor);
+    charEnds.push_back(static_cast<size_t>(cursor - start));
+  }
+
+  size_t low = 0;
+  size_t high = charEnds.size();
+  while (low < high) {
+    const size_t mid = low + (high - low + 1) / 2;
+    const std::string candidate(text, charEnds[mid - 1]);
+    if (renderer.getTextWidth(fontId, candidate.c_str(), style) <= maxWidth) {
+      low = mid;
+    } else {
+      high = mid - 1;
+    }
+  }
+
+  return low == 0 ? std::string() : std::string(text, charEnds[low - 1]);
+}
 
 // Helper: draw battery icon at given position
 void drawBatteryIcon(const GfxRenderer& renderer, int x, int y, int battWidth, int rectHeight, uint16_t percentage) {
@@ -366,14 +438,40 @@ void BaseTheme::drawTabBar(const GfxRenderer& renderer, const Rect rect, const s
                            bool selected) const {
   constexpr int underlineHeight = 2;  // Height of selection underline
   constexpr int underlineGap = 4;     // Gap between text and underline
+  const int tabCount = static_cast<int>(tabs.size());
+  if (tabCount == 0) {
+    return;
+  }
 
-  int currentX = rect.x + BaseMetrics::values.contentSidePadding;
+  std::vector<int> fontIds;
+  std::vector<EpdFontFamily::Style> fontFamilies;
+  std::vector<int> desiredWidths;
+  fontIds.reserve(tabCount);
+  fontFamilies.reserve(tabCount);
+  desiredWidths.reserve(tabCount);
 
   for (const auto& tab : tabs) {
     const int fontId = tab.compact ? SMALL_FONT_ID : UI_12_FONT_ID;
+    const EpdFontFamily::Style family = tab.selected ? EpdFontFamily::BOLD : EpdFontFamily::REGULAR;
+    fontIds.push_back(fontId);
+    fontFamilies.push_back(family);
+    desiredWidths.push_back(renderer.getTextWidth(fontId, tab.label, family));
+  }
+
+  const int availableWidth = std::max(0, rect.width - BaseMetrics::values.contentSidePadding * 2);
+  const int totalGapWidth = BaseMetrics::values.tabSpacing * std::max(0, tabCount - 1);
+  const std::vector<int> textWidths = allocateTabTextWidths(desiredWidths, availableWidth - totalGapWidth);
+
+  int currentX = rect.x + BaseMetrics::values.contentSidePadding;
+
+  for (int i = 0; i < tabCount; ++i) {
+    const auto& tab = tabs[i];
+    const int fontId = fontIds[i];
+    const EpdFontFamily::Style fontFamily = fontFamilies[i];
     const int lineHeight = renderer.getLineHeight(fontId);
-    const int textWidth =
-        renderer.getTextWidth(fontId, tab.label, tab.selected ? EpdFontFamily::BOLD : EpdFontFamily::REGULAR);
+    const std::string label =
+        textWidths[i] > 0 ? fitTabTextToWidth(renderer, fontId, tab.label, textWidths[i], fontFamily) : std::string();
+    const int textWidth = label.empty() ? 0 : renderer.getTextWidth(fontId, label.c_str(), fontFamily);
 
     // Draw underline for selected tab
     if (tab.selected) {
@@ -385,10 +483,15 @@ void BaseTheme::drawTabBar(const GfxRenderer& renderer, const Rect rect, const s
     }
 
     // Draw tab label
-    renderer.drawText(fontId, currentX, rect.y + (tab.compact ? 2 : 0), tab.label, !(tab.selected && selected),
-                      tab.selected ? EpdFontFamily::BOLD : EpdFontFamily::REGULAR);
+    if (!label.empty()) {
+      renderer.drawText(fontId, currentX, rect.y + (tab.compact ? 2 : 0), label.c_str(), !(tab.selected && selected),
+                        fontFamily);
+    }
 
-    currentX += textWidth + BaseMetrics::values.tabSpacing;
+    currentX += textWidth;
+    if (i < tabCount - 1) {
+      currentX += BaseMetrics::values.tabSpacing;
+    }
   }
 }
 

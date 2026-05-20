@@ -182,6 +182,7 @@ void applyUiFontsForLanguage(const Language lang) {
 }  // namespace
 
 void refreshUiFontsForCurrentLanguage() { applyUiFontsForLanguage(I18N.getLanguage()); }
+void useLanguageSelectionUiFonts() { applyUiFontsForLanguage(Language::VI); }
 
 // measurement of power button press duration calibration value
 unsigned long t1 = 0;

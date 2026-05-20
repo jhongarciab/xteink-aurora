@@ -33,6 +33,7 @@ class ReaderQuickSettingsActivity final : public Activity {
   static std::string getSettingName(int index);
   static std::string getSettingValue(int index);
   static bool isImmediateRendererSetting(const QuickSetting& setting);
+  static bool needsImmediateRendererFullRefresh(const QuickSetting& setting);
 
   void toggleSelectedSetting();
   void applyImmediateRendererSetting(const QuickSetting& setting);

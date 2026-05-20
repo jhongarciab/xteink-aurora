@@ -357,8 +357,6 @@ constexpr WebSettingDef WEB_SETTINGS[] = {
 
     WEB_ENUM(StrId::STR_BROWSE_FILES, browseFilesShortcut, OPT_SHORTCUT_LOCATION, "browseFilesShortcut",
              StrId::STR_SHORTCUTS_SECTION),
-    WEB_ENUM(StrId::STR_STATS_SHORTCUT, statsShortcut, OPT_SHORTCUT_LOCATION, "statsShortcut",
-             StrId::STR_SHORTCUTS_SECTION),
     WEB_ENUM(StrId::STR_SYNC_DAY, syncDayShortcut, OPT_SHORTCUT_LOCATION, "syncDayShortcut",
              StrId::STR_SHORTCUTS_SECTION),
     WEB_ENUM(StrId::STR_SETTINGS_TITLE, settingsShortcut, OPT_SHORTCUT_LOCATION, "settingsShortcut",

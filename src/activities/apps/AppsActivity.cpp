@@ -152,7 +152,6 @@ void AppsActivity::openSelectedApp() {
     case ShortcutId::BrowseFiles:
       activityManager.goToFileBrowser();
       return;
-    case ShortcutId::Stats:
     case ShortcutId::ReadingStats:
       activity = std::make_unique<ReadingStatsActivity>(renderer, mappedInput);
       break;

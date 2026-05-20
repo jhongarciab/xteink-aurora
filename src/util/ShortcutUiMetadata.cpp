@@ -91,7 +91,6 @@ std::string getFileTransferShortcutSubtitle() {
 
 std::string ShortcutUiMetadata::getSubtitle(const ShortcutDefinition& definition) {
   switch (definition.id) {
-    case ShortcutId::Stats:
     case ShortcutId::ReadingStats:
       return getStatsShortcutSubtitle();
     case ShortcutId::SyncDay:
@@ -116,6 +115,5 @@ std::string ShortcutUiMetadata::getSubtitle(const ShortcutDefinition& definition
 }
 
 bool ShortcutUiMetadata::showAccessory(const ShortcutDefinition& definition) {
-  return (definition.id == ShortcutId::Stats || definition.id == ShortcutId::ReadingStats) &&
-         READING_STATS.getTodayReadingMs() >= getDailyReadingGoalMs();
+  return definition.id == ShortcutId::ReadingStats && READING_STATS.getTodayReadingMs() >= getDailyReadingGoalMs();
 }

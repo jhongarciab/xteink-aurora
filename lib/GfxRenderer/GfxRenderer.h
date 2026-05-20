@@ -110,6 +110,7 @@ class GfxRenderer {
     nextRefreshOverride = mode;
     nextRefreshOverridePending = true;
   }
+  void clearNextRefreshOverride() const { nextRefreshOverridePending = false; }
   void requestNextFullRefresh() const { requestNextRefresh(HalDisplay::FULL_REFRESH); }
   void setTextDarkness(const uint8_t d) { textDarkness = d; }
   uint8_t getTextDarkness() const { return textDarkness; }

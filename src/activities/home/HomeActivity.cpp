@@ -978,7 +978,6 @@ void HomeActivity::loop() {
         case ShortcutId::BrowseFiles:
           onFileBrowserOpen();
           break;
-        case ShortcutId::Stats:
         case ShortcutId::ReadingStats:
           onReadingStatsOpen();
           break;

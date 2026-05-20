@@ -1,6 +1,7 @@
 #include "SettingsActivity.h"
 
 #include <Arduino.h>
+#include <FontCacheManager.h>
 #include <GfxRenderer.h>
 #include <HalStorage.h>
 #include <HalTiltSensor.h>
@@ -381,6 +382,16 @@ std::string getSettingValueText(const SettingInfo& setting) {
 }
 
 const char* getSettingNameText(const SettingInfo& setting) { return I18N.get(setting.nameId); }
+
+void appendPrewarmText(std::string& text, const char* value) {
+  if (value == nullptr || value[0] == '\0') {
+    return;
+  }
+  text += value;
+  text += '\n';
+}
+
+void appendPrewarmText(std::string& text, const std::string& value) { appendPrewarmText(text, value.c_str()); }
 }  // namespace
 
 void SettingsActivity::onEnter() {
@@ -913,6 +924,44 @@ void SettingsActivity::renderAppSettingsList(const Rect& rect) const {
   }
 }
 
+bool SettingsActivity::prewarmSettingsRenderText(const char* settingsTitle, const char* selectedCategoryLabel,
+                                                 const char* firmwareVersion, const char* confirmLabel) const {
+  auto* fontCache = renderer.getFontCacheManager();
+  if (fontCache == nullptr || currentSettings == nullptr) {
+    return false;
+  }
+
+  std::string text;
+  text.reserve(2048);
+  appendPrewarmText(text, settingsTitle);
+  appendPrewarmText(text, selectedCategoryLabel);
+  appendPrewarmText(text, firmwareVersion);
+  appendPrewarmText(text, confirmLabel);
+  appendPrewarmText(text, tr(STR_BACK));
+  appendPrewarmText(text, tr(STR_DIR_UP));
+  appendPrewarmText(text, tr(STR_DIR_DOWN));
+
+  for (int i = 0; i < categoryCount; ++i) {
+    appendPrewarmText(text, I18N.get(categoryNames[i]));
+  }
+
+  for (const auto* setting : *currentSettings) {
+    appendPrewarmText(text, getSettingNameText(*setting));
+    appendPrewarmText(text, getSettingValueText(*setting));
+  }
+
+  if (text.empty()) {
+    return false;
+  }
+
+  constexpr uint8_t regularAndBold =
+      (1 << static_cast<uint8_t>(EpdFontFamily::REGULAR)) | (1 << static_cast<uint8_t>(EpdFontFamily::BOLD));
+  fontCache->clearCache();
+  fontCache->prewarmCache(UI_10_FONT_ID, text.c_str(), regularAndBold);
+  fontCache->prewarmCache(UI_12_FONT_ID, text.c_str(), regularAndBold);
+  return true;
+}
+
 void SettingsActivity::render(RenderLock&&) {
   renderer.clearScreen();
 
@@ -923,6 +972,17 @@ void SettingsActivity::render(RenderLock&&) {
   const char* settingsTitle = tr(STR_SETTINGS_TITLE);
   const char* selectedCategoryLabel = I18N.get(categoryNames[selectedCategoryIndex]);
   const char* firmwareVersion = CROSSPOINT_VERSION;
+  const char* confirmLabel = nullptr;
+  if (selectedSettingIndex == 0) {
+    confirmLabel = I18N.get(categoryNames[(selectedCategoryIndex + 1) % categoryCount]);
+  } else {
+    const auto& selectedSetting = *(*currentSettings)[selectedSettingIndex - 1];
+    confirmLabel = (selectedSetting.type == SettingType::ACTION || selectedSetting.type == SettingType::SECTION)
+                       ? tr(STR_SELECT)
+                       : tr(STR_TOGGLE);
+  }
+  const bool prewarmedFonts =
+      prewarmSettingsRenderText(settingsTitle, selectedCategoryLabel, firmwareVersion, confirmLabel);
 
   GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, settingsTitle, nullptr);
   HeaderDateUtils::drawTopLine(renderer, HeaderDateUtils::getDisplayDateText());
@@ -981,18 +1041,12 @@ void SettingsActivity::render(RenderLock&&) {
   }
 
   // Draw help text
-  const char* confirmLabel = nullptr;
-  if (selectedSettingIndex == 0) {
-    confirmLabel = I18N.get(categoryNames[(selectedCategoryIndex + 1) % categoryCount]);
-  } else {
-    const auto& selectedSetting = *(*currentSettings)[selectedSettingIndex - 1];
-    confirmLabel = (selectedSetting.type == SettingType::ACTION || selectedSetting.type == SettingType::SECTION)
-                       ? tr(STR_SELECT)
-                       : tr(STR_TOGGLE);
-  }
   const auto labels = mappedInput.mapLabels(tr(STR_BACK), confirmLabel, tr(STR_DIR_UP), tr(STR_DIR_DOWN));
   GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
 
   // Always use standard refresh for settings screen
   renderer.displayBuffer();
+  if (prewarmedFonts) {
+    renderer.getFontCacheManager()->clearCache();
+  }
 }

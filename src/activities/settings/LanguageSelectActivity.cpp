@@ -13,6 +13,7 @@
 
 void LanguageSelectActivity::onEnter() {
   Activity::onEnter();
+  useLanguageSelectionUiFonts();
 
   // Set current selection based on current language
   const auto currentLang = static_cast<uint8_t>(I18N.getLanguage());
@@ -24,7 +25,10 @@ void LanguageSelectActivity::onEnter() {
   requestUpdate();
 }
 
-void LanguageSelectActivity::onExit() { Activity::onExit(); }
+void LanguageSelectActivity::onExit() {
+  refreshUiFontsForCurrentLanguage();
+  Activity::onExit();
+}
 
 void LanguageSelectActivity::loop() {
   if (mappedInput.wasPressed(MappedInputManager::Button::Back)) {

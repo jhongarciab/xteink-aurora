@@ -204,6 +204,26 @@ uint8_t migrateStoredFlashcardStudyMode(const uint8_t rawMode, const uint8_t sch
   if (migratedMode != rawMode && needsResave) *needsResave = true;
   return migratedMode;
 }
+
+void migrateLegacyStatsShortcut(CrossPointSettings& settings, const JsonDocument& doc, bool* needsResave) {
+  const bool hasLegacyStatsShortcut = !doc["statsShortcut"].isNull() || !doc["statsShortcutOrder"].isNull() ||
+                                      !doc["statsShortcutVisible"].isNull();
+  if (!hasLegacyStatsShortcut) {
+    return;
+  }
+
+  const bool legacyVisible = settings.statsShortcutVisible != 0;
+  const auto legacyLocation = static_cast<CrossPointSettings::SHORTCUT_LOCATION>(settings.statsShortcut);
+  if (legacyVisible && (legacyLocation == CrossPointSettings::SHORTCUT_HOME ||
+                        legacyLocation == CrossPointSettings::SHORTCUT_APPS)) {
+    settings.readingStatsShortcut = settings.statsShortcut;
+    settings.readingStatsShortcutOrder = settings.statsShortcutOrder;
+    settings.readingStatsShortcutVisible = 1;
+  }
+
+  settings.statsShortcutVisible = 0;
+  if (needsResave) *needsResave = true;
+}
 }  // namespace
 
 // Convert legacy settings.
@@ -547,6 +567,7 @@ bool loadSettingsDirect(CrossPointSettings& s, const JsonDocument& doc, bool* ne
   s.opdsBrowserShortcutVisible = clamp(doc["opdsBrowserShortcutVisible"] | s.opdsBrowserShortcutVisible,
                                        static_cast<uint8_t>(2), s.opdsBrowserShortcutVisible);
 
+  migrateLegacyStatsShortcut(s, doc, needsResave);
   normalizeShortcutOrderSettings(s);
   CrossPointSettings::validateFrontButtonMapping(s);
 
@@ -752,8 +773,6 @@ bool JsonSettingsIO::saveSettings(const CrossPointSettings& s, const char* path)
   doc["appsHubShortcutOrder"] = s.appsHubShortcutOrder;
   doc["browseFilesShortcut"] = s.browseFilesShortcut;
   doc["browseFilesShortcutOrder"] = s.browseFilesShortcutOrder;
-  doc["statsShortcut"] = s.statsShortcut;
-  doc["statsShortcutOrder"] = s.statsShortcutOrder;
   doc["syncDayShortcut"] = s.syncDayShortcut;
   doc["syncDayShortcutOrder"] = s.syncDayShortcutOrder;
   doc["settingsShortcut"] = s.settingsShortcut;
@@ -785,7 +804,6 @@ bool JsonSettingsIO::saveSettings(const CrossPointSettings& s, const char* path)
   doc["opdsBrowserShortcut"] = s.opdsBrowserShortcut;
   doc["opdsBrowserShortcutOrder"] = s.opdsBrowserShortcutOrder;
   doc["browseFilesShortcutVisible"] = s.browseFilesShortcutVisible;
-  doc["statsShortcutVisible"] = s.statsShortcutVisible;
   doc["syncDayShortcutVisible"] = s.syncDayShortcutVisible;
   doc["settingsShortcutVisible"] = s.settingsShortcutVisible;
   doc["readingStatsShortcutVisible"] = s.readingStatsShortcutVisible;

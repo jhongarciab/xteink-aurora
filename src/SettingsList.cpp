@@ -137,8 +137,6 @@ const std::vector<SettingInfo>& getSettingsList() {
       SettingInfo::Enum(StrId::STR_BROWSE_FILES, &CrossPointSettings::browseFilesShortcut,
                         {StrId::STR_HOME_LOCATION, StrId::STR_APPS}, "browseFilesShortcut",
                         StrId::STR_SHORTCUTS_SECTION),
-      SettingInfo::Enum(StrId::STR_STATS_SHORTCUT, &CrossPointSettings::statsShortcut,
-                        {StrId::STR_HOME_LOCATION, StrId::STR_APPS}, "statsShortcut", StrId::STR_SHORTCUTS_SECTION),
       SettingInfo::Enum(StrId::STR_SYNC_DAY, &CrossPointSettings::syncDayShortcut,
                         {StrId::STR_HOME_LOCATION, StrId::STR_APPS}, "syncDayShortcut", StrId::STR_SHORTCUTS_SECTION),
       SettingInfo::Enum(StrId::STR_SETTINGS_TITLE, &CrossPointSettings::settingsShortcut,

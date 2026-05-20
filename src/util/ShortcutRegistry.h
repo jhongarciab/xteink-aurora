@@ -10,7 +10,7 @@
 
 enum class ShortcutId {
   BrowseFiles = 0,
-  Stats,
+  Stats,  // Legacy: replaced by ReadingStats, kept only so old code paths remain harmless.
   SyncDay,
   Settings,
   ReadingStats,
@@ -37,14 +37,11 @@ struct ShortcutDefinition {
   uint8_t CrossPointSettings::* visiblePtr;
 };
 
-inline const std::array<ShortcutDefinition, 16>& getShortcutDefinitions() {
-  static const std::array<ShortcutDefinition, 16> definitions = {
+inline const std::array<ShortcutDefinition, 15>& getShortcutDefinitions() {
+  static const std::array<ShortcutDefinition, 15> definitions = {
       ShortcutDefinition{ShortcutId::BrowseFiles, StrId::STR_BROWSE_FILES, StrId::STR_NONE_OPT, UIIcon::Folder,
                          &CrossPointSettings::browseFilesShortcut, &CrossPointSettings::browseFilesShortcutOrder,
                          &CrossPointSettings::browseFilesShortcutVisible},
-      ShortcutDefinition{ShortcutId::Stats, StrId::STR_STATS_SHORTCUT, StrId::STR_NONE_OPT, UIIcon::Book,
-                         &CrossPointSettings::statsShortcut, &CrossPointSettings::statsShortcutOrder,
-                         &CrossPointSettings::statsShortcutVisible},
       ShortcutDefinition{ShortcutId::SyncDay, StrId::STR_SYNC_DAY, StrId::STR_SYNC_DAY_DESC, UIIcon::Wifi,
                          &CrossPointSettings::syncDayShortcut, &CrossPointSettings::syncDayShortcutOrder,
                          &CrossPointSettings::syncDayShortcutVisible},

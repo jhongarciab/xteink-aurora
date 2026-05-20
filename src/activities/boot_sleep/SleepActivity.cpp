@@ -33,10 +33,16 @@ bool usesCustomSleepImages() {
   return SETTINGS.sleepScreen == CrossPointSettings::SLEEP_SCREEN_MODE::CUSTOM ||
          (SETTINGS.sleepScreen == CrossPointSettings::SLEEP_SCREEN_MODE::COVER_CUSTOM && !APP_STATE.lastSleepFromReader);
 }
+
+void displaySleepBuffer(const GfxRenderer& renderer) {
+  renderer.clearNextRefreshOverride();
+  renderer.displayBuffer(HalDisplay::FULL_REFRESH);
+}
 }  // namespace
 
 void SleepActivity::onEnter() {
   Activity::onEnter();
+  renderer.clearNextRefreshOverride();
   const bool restoreDarkMode = renderer.isDarkMode();
   if (restoreDarkMode) {
     renderer.setDarkMode(false);
@@ -56,17 +62,21 @@ void SleepActivity::onEnter() {
 
   switch (SETTINGS.sleepScreen) {
     case (CrossPointSettings::SLEEP_SCREEN_MODE::BLANK):
-      return renderBlankSleepScreen();
+      renderBlankSleepScreen();
+      break;
     case (CrossPointSettings::SLEEP_SCREEN_MODE::CUSTOM):
-      return renderCustomSleepScreen();
+      renderCustomSleepScreen();
+      break;
     case (CrossPointSettings::SLEEP_SCREEN_MODE::COVER):
-      return renderCoverSleepScreen();
+      renderCoverSleepScreen();
+      break;
     case (CrossPointSettings::SLEEP_SCREEN_MODE::COVER_CUSTOM):
       if (APP_STATE.lastSleepFromReader) {
-        return renderCoverSleepScreen();
+        renderCoverSleepScreen();
       } else {
-        return renderCustomSleepScreen();
+        renderCustomSleepScreen();
       }
+      break;
     default:
       renderDefaultSleepScreen();
       break;
@@ -158,7 +168,7 @@ void SleepActivity::renderCustomSleepScreen() const {
       GUI.drawPopup(renderer, tr(STR_ENTERING_SLEEP));
       FsFile file;
       if (SleepScreenCache::load(renderer, selectedPath)) {
-        renderer.displayBuffer(HalDisplay::HALF_REFRESH);
+        displaySleepBuffer(renderer);
         return;
       }
       if (Storage.openFileForRead("SLP", selectedPath, file)) {
@@ -182,7 +192,7 @@ void SleepActivity::renderCustomSleepScreen() const {
     if (bitmap.parseHeaders() == BmpReaderError::Ok) {
       LOG_DBG("SLP", "Loading: /sleep.bmp");
       if (SleepScreenCache::load(renderer, "/sleep.bmp")) {
-        renderer.displayBuffer(HalDisplay::HALF_REFRESH);
+        displaySleepBuffer(renderer);
         file.close();
         return;
       }
@@ -222,7 +232,7 @@ void SleepActivity::renderDefaultSleepScreen() const {
     renderer.invertScreen();
   }
 
-  renderer.displayBuffer(HalDisplay::HALF_REFRESH);
+  displaySleepBuffer(renderer);
 }
 
 void SleepActivity::renderBitmapSleepScreen(const Bitmap& bitmap, const std::string& sourcePath) const {
@@ -278,7 +288,7 @@ void SleepActivity::renderBitmapSleepScreen(const Bitmap& bitmap, const std::str
     SleepScreenCache::save(renderer, sourcePath);
   }
 
-  renderer.displayBuffer(HalDisplay::HALF_REFRESH);
+  displaySleepBuffer(renderer);
 
   if (hasGreyscale) {
     bitmap.rewindToData();
@@ -306,7 +316,7 @@ bool SleepActivity::renderPngSleepScreen(const std::string& sourcePath) const {
     return false;
   }
 
-  renderer.displayBuffer(HalDisplay::FULL_REFRESH);
+  displaySleepBuffer(renderer);
   renderer.displayBuffer(HalDisplay::HALF_REFRESH);
   return true;
 }
@@ -374,7 +384,7 @@ void SleepActivity::renderCoverSleepScreen() const {
 
   FsFile file;
   if (SleepScreenCache::load(renderer, coverBmpPath)) {
-    renderer.displayBuffer(HalDisplay::HALF_REFRESH);
+    displaySleepBuffer(renderer);
     return;
   }
   if (Storage.openFileForRead("SLP", coverBmpPath, file)) {
@@ -393,5 +403,5 @@ void SleepActivity::renderCoverSleepScreen() const {
 
 void SleepActivity::renderBlankSleepScreen() const {
   renderer.clearScreen();
-  renderer.displayBuffer(HalDisplay::HALF_REFRESH);
+  displaySleepBuffer(renderer);
 }

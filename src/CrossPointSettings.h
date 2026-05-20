@@ -322,6 +322,7 @@ class CrossPointSettings {
   uint8_t appsHubShortcutOrder = 1;
   uint8_t browseFilesShortcut = SHORTCUT_HOME;
   uint8_t browseFilesShortcutOrder = 0;
+  // Legacy Stats shortcut fields retained for settings.json migration to readingStatsShortcut.
   uint8_t statsShortcut = SHORTCUT_HOME;
   uint8_t statsShortcutOrder = 2;
   uint8_t syncDayShortcut = SHORTCUT_HOME;
@@ -355,6 +356,7 @@ class CrossPointSettings {
   uint8_t opdsBrowserShortcut = SHORTCUT_HOME;
   uint8_t opdsBrowserShortcutOrder = 17;
   uint8_t browseFilesShortcutVisible = 1;
+  // Legacy Stats shortcut visibility retained for settings.json migration to readingStatsShortcut.
   uint8_t statsShortcutVisible = 1;
   uint8_t syncDayShortcutVisible = 1;
   uint8_t settingsShortcutVisible = 1;

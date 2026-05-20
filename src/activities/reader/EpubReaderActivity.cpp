@@ -608,6 +608,8 @@ void EpubReaderActivity::applyReaderSettingsChanges(const ReaderSettingsSnapshot
                                  before.bionicReading != SETTINGS.bionicReading ||
                                  before.textAntiAliasing != SETTINGS.textAntiAliasing ||
                                  before.textDarkness != SETTINGS.textDarkness || refreshPolicyChanged;
+  const bool displayModeChanged = before.darkMode != SETTINGS.darkMode;
+  const bool needsFullRefresh = orientationChanged || paginationChanged || displayModeChanged;
 
   if (!(paginationChanged || orientationChanged || renderOnlyChanged)) {
     return;
@@ -620,7 +622,9 @@ void EpubReaderActivity::applyReaderSettingsChanges(const ReaderSettingsSnapshot
   renderer.setFadingFix(SETTINGS.fadingFix);
   renderer.setDarkMode(SETTINGS.darkMode);
   renderer.setTextDarkness(SETTINGS.textDarkness);
-  renderer.requestNextFullRefresh();
+  if (needsFullRefresh) {
+    renderer.requestNextFullRefresh();
+  }
 
   if (orientationChanged || paginationChanged) {
     RenderLock lock(*this);
@@ -639,7 +643,7 @@ void EpubReaderActivity::applyReaderSettingsChanges(const ReaderSettingsSnapshot
     pagesUntilFullRefresh = SETTINGS.getRefreshFrequency();
   }
 
-  pendingForceFullRefresh = true;
+  pendingForceFullRefresh = needsFullRefresh;
   requestUpdate(true);
 }
 

@@ -5,6 +5,7 @@
 #include <HalPowerManager.h>
 #include <HalStorage.h>
 #include <I18n.h>
+#include <Utf8.h>
 
 #include <algorithm>
 #include <cstdint>
@@ -52,6 +53,76 @@ constexpr int mainMenuColumns = 2;
 constexpr int progressRowGap = 8;
 constexpr int progressBarHeight = 8;
 int coverWidth = 0;
+
+std::vector<int> allocateTabTextWidths(const std::vector<int>& desiredWidths, int textBudget) {
+  const int tabCount = static_cast<int>(desiredWidths.size());
+  std::vector<int> widths(tabCount, 0);
+  if (tabCount == 0 || textBudget <= 0) {
+    return widths;
+  }
+
+  std::vector<bool> fixed(tabCount, false);
+  int remainingBudget = textBudget;
+  int remainingCount = tabCount;
+  while (remainingCount > 0) {
+    const int fairWidth = std::max(0, remainingBudget / remainingCount);
+    bool fixedAny = false;
+    for (int i = 0; i < tabCount; ++i) {
+      if (!fixed[i] && desiredWidths[i] <= fairWidth) {
+        widths[i] = desiredWidths[i];
+        fixed[i] = true;
+        remainingBudget -= desiredWidths[i];
+        --remainingCount;
+        fixedAny = true;
+      }
+    }
+    if (!fixedAny) {
+      break;
+    }
+  }
+
+  if (remainingCount > 0) {
+    const int fairWidth = std::max(0, remainingBudget / remainingCount);
+    for (int i = 0; i < tabCount; ++i) {
+      if (!fixed[i]) {
+        widths[i] = fairWidth;
+      }
+    }
+  }
+  return widths;
+}
+
+std::string fitTabTextToWidth(const GfxRenderer& renderer, const int fontId, const char* text, const int maxWidth,
+                              const EpdFontFamily::Style style) {
+  if (!text || maxWidth <= 0) {
+    return {};
+  }
+  if (renderer.getTextWidth(fontId, text, style) <= maxWidth) {
+    return text;
+  }
+
+  std::vector<size_t> charEnds;
+  const auto* start = reinterpret_cast<const unsigned char*>(text);
+  const auto* cursor = start;
+  while (*cursor != '\0') {
+    utf8NextCodepoint(&cursor);
+    charEnds.push_back(static_cast<size_t>(cursor - start));
+  }
+
+  size_t low = 0;
+  size_t high = charEnds.size();
+  while (low < high) {
+    const size_t mid = low + (high - low + 1) / 2;
+    const std::string candidate(text, charEnds[mid - 1]);
+    if (renderer.getTextWidth(fontId, candidate.c_str(), style) <= maxWidth) {
+      low = mid;
+    } else {
+      high = mid - 1;
+    }
+  }
+
+  return low == 0 ? std::string() : std::string(text, charEnds[low - 1]);
+}
 
 void drawLyraBatteryIcon(const GfxRenderer& renderer, int x, int y, int battWidth, int rectHeight,
                          uint16_t percentage) {
@@ -287,15 +358,42 @@ void LyraTheme::drawSubHeader(const GfxRenderer& renderer, Rect rect, const char
 
 void LyraTheme::drawTabBar(const GfxRenderer& renderer, Rect rect, const std::vector<TabInfo>& tabs,
                            bool selected) const {
+  const int tabCount = static_cast<int>(tabs.size());
+  if (tabCount == 0) {
+    return;
+  }
+
+  std::vector<int> fontIds;
+  std::vector<int> desiredWidths;
+  fontIds.reserve(tabCount);
+  desiredWidths.reserve(tabCount);
+
+  for (const auto& tab : tabs) {
+    const int fontId = tab.compact ? SMALL_FONT_ID : UI_10_FONT_ID;
+    fontIds.push_back(fontId);
+    desiredWidths.push_back(renderer.getTextWidth(fontId, tab.label, EpdFontFamily::REGULAR));
+  }
+
+  const int availableWidth = std::max(0, rect.width - LyraMetrics::values.contentSidePadding * 2);
+  const int totalGapWidth = LyraMetrics::values.tabSpacing * std::max(0, tabCount - 1);
+  const int totalPaddingWidth = 2 * hPaddingInSelection * tabCount;
+  const std::vector<int> textWidths =
+      allocateTabTextWidths(desiredWidths, availableWidth - totalGapWidth - totalPaddingWidth);
+
   int currentX = rect.x + LyraMetrics::values.contentSidePadding;
 
   if (selected) {
     renderer.fillRectDither(rect.x, rect.y, rect.width, rect.height, Color::LightGray);
   }
 
-  for (const auto& tab : tabs) {
-    const int fontId = tab.compact ? SMALL_FONT_ID : UI_10_FONT_ID;
-    const int textWidth = renderer.getTextWidth(fontId, tab.label, EpdFontFamily::REGULAR);
+  for (int i = 0; i < tabCount; ++i) {
+    const auto& tab = tabs[i];
+    const int fontId = fontIds[i];
+    const std::string label =
+        textWidths[i] > 0 ? fitTabTextToWidth(renderer, fontId, tab.label, textWidths[i], EpdFontFamily::REGULAR)
+                          : std::string();
+    const int textWidth =
+        label.empty() ? 0 : renderer.getTextWidth(fontId, label.c_str(), EpdFontFamily::REGULAR);
 
     if (tab.selected) {
       if (selected) {
@@ -309,10 +407,15 @@ void LyraTheme::drawTabBar(const GfxRenderer& renderer, Rect rect, const std::ve
       }
     }
 
-    renderer.drawText(fontId, currentX + hPaddingInSelection, rect.y + (tab.compact ? 8 : 6), tab.label,
-                      !(tab.selected && selected), EpdFontFamily::REGULAR);
+    if (!label.empty()) {
+      renderer.drawText(fontId, currentX + hPaddingInSelection, rect.y + (tab.compact ? 8 : 6), label.c_str(),
+                        !(tab.selected && selected), EpdFontFamily::REGULAR);
+    }
 
-    currentX += textWidth + LyraMetrics::values.tabSpacing + 2 * hPaddingInSelection;
+    currentX += textWidth + 2 * hPaddingInSelection;
+    if (i < tabCount - 1) {
+      currentX += LyraMetrics::values.tabSpacing;
+    }
   }
 
   renderer.drawLine(rect.x, rect.y + rect.height - 1, rect.x + rect.width - 1, rect.y + rect.height - 1, true);
