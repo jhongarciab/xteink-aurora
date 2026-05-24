@@ -44,7 +44,7 @@ The philosophy of this fork is simple: keep the firmware fast, stable, and focus
 |---|---|
 | Project | `CPR-vCodex` |
 | Device | `Xteink X4`; `Xteink X3` compatibility reported by users, not personally tested |
-| Current release (CPR-vCodex) build | [`1.3.0.9-cpr-vcodex`](https://github.com/franssjz/cpr-vcodex/releases/tag/1.3.0.9-cpr-vcodex) |
+| Current release (CPR-vCodex) build | [`1.3.0.11-cpr-vcodex`](https://github.com/franssjz/cpr-vcodex/releases/tag/1.3.0.11-cpr-vcodex) |
 | Latest SD font package | [`sd-fonts-m1-b4`](https://github.com/franssjz/cpr-vcodex/releases/tag/sd-fonts-m1-b4) |
 | Changelog | [CHANGELOG.md](./CHANGELOG.md) |
 | Latest release notes | - Added `Reading Dashboard` and `Cover + Stats` sleep screens with goal, streak, achievement, book, and chapter progress summaries.<br>- Polished the sleep overlays for compact e-ink layout, long text truncation, progress bars, and daily-goal completion state.<br>- Added a sequential flashcard mode that studies the full deck in CSV/Excel order without shuffling.<br>- Included the latest Auto Flash reboot and font-converter fixes from PR #71 and PR #69. |
@@ -504,7 +504,7 @@ Each packaged dev build now keeps the base firmware line and the local flash ide
 Practical values to look at:
 
 - base firmware line: `CrossPoint Reader 1.3.0`
-- current release build style: `1.3.0.9-cpr-vcodex`
+- current release build style: `1.3.0.11-cpr-vcodex`
 - packaged artifact style: `artifacts/<version>-cpr-vcodex.bin`
 
 The incremental `.bNNNN` suffix exists specifically to help distinguish newer flashes from older ones on real hardware.
@@ -574,10 +574,10 @@ Release publishing:
 - before tagging, run:
 
 ```powershell
-python scripts/pre_release_check.py --tag 1.3.0.9-cpr-vcodex
+python scripts/pre_release_check.py --tag 1.3.0.11-cpr-vcodex
 ```
 
-- push a stable tag named like `1.3.0.9-cpr-vcodex`
+- push a stable tag named like `1.3.0.11-cpr-vcodex`
 - the release workflow builds `gh_release`, validates that the packaged artifact
   name matches the tag, and attaches only the flashable `<tag>.bin` to the GitHub Release
 - tagged CI release builds derive the firmware release number from the tag, not

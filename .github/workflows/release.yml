@@ -113,7 +113,7 @@ jobs:
           git clone --depth=1 "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "${workdir}"
           cd "${workdir}"
 
-          python3 scripts/sync_autoflash_firmware.py --repo "${GITHUB_REPOSITORY}"
+          python3 scripts/sync_autoflash_firmware.py --repo "${GITHUB_REPOSITORY}" --tag "${tag}"
 
           if git diff --quiet; then
             echo "Auto-flash firmware is already synchronized."

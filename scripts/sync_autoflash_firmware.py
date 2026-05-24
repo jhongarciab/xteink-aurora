@@ -7,6 +7,7 @@ import os
 import re
 import sys
 import tempfile
+from urllib.parse import quote
 import urllib.request
 from pathlib import Path
 from typing import Any
@@ -20,6 +21,8 @@ FIRMWARE_TAG_RE = re.compile(r"^\d+\.\d+\.\d+\.\d+(?:[.-][0-9A-Za-z]+)?-cpr-vcod
 DOWNLOAD_URL_RE = re.compile(
     r"https://github\.com/[^/]+/[^/]+/releases/download/[^/]+/[^\"'\s<>]+\.bin"
 )
+FIRMWARE_VERSION_PREFIX_RE = re.compile(r"^(\d+)\.(\d+)\.(\d+)\.(\d+)")
+FALLBACK_RELEASE_RE = re.compile(r"(const FALLBACK_RELEASE = \{.*?\n    \};)", re.DOTALL)
 
 
 def request_json(url: str, token: str | None) -> Any:
@@ -64,21 +67,56 @@ def select_firmware_asset(release: dict[str, Any]) -> dict[str, Any]:
     raise RuntimeError(f"Could not choose firmware asset from release {tag}. Assets: {names}")
 
 
+def firmware_tag_sort_key(tag: str) -> tuple[int, int, int, int, int, str] | None:
+    if not FIRMWARE_TAG_RE.fullmatch(tag):
+        return None
+
+    prefix = tag.removesuffix("-cpr-vcodex")
+    match = FIRMWARE_VERSION_PREFIX_RE.match(prefix)
+    if not match:
+        return None
+
+    numbers = tuple(int(part) for part in match.groups())
+    stable = 1 if prefix == ".".join(str(number) for number in numbers) else 0
+    return (*numbers, stable, tag)
+
+
+def fetch_firmware_release_by_tag(repo: str, tag: str, token: str | None) -> dict[str, Any]:
+    release = request_json(
+        f"https://api.github.com/repos/{repo}/releases/tags/{quote(tag, safe='')}",
+        token,
+    )
+    if not isinstance(release, dict):
+        raise RuntimeError(f"GitHub release response for {tag} was not an object")
+    if release.get("draft") or release.get("prerelease"):
+        raise RuntimeError(f"Release {tag} is not a stable published firmware release")
+    if not FIRMWARE_TAG_RE.fullmatch(str(release.get("tag_name", ""))):
+        raise RuntimeError(f"Release {tag} is not a CPR-vCodex firmware release")
+
+    select_firmware_asset(release)
+    return release
+
+
 def fetch_latest_firmware_release(repo: str, token: str | None) -> dict[str, Any]:
     releases = request_json(f"https://api.github.com/repos/{repo}/releases?per_page=50", token)
     if not isinstance(releases, list):
         raise RuntimeError("GitHub releases response was not a list")
 
+    candidates: list[tuple[tuple[int, int, int, int, int, str], dict[str, Any]]] = []
     for release in releases:
         if release.get("draft") or release.get("prerelease"):
             continue
 
         tag = str(release.get("tag_name", ""))
-        if not FIRMWARE_TAG_RE.fullmatch(tag):
+        sort_key = firmware_tag_sort_key(tag)
+        if sort_key is None:
             continue
 
         select_firmware_asset(release)
-        return release
+        candidates.append((sort_key, release))
+
+    if candidates:
+        return max(candidates, key=lambda item: item[0])[1]
 
     raise RuntimeError("Could not find a stable CPR-vCodex firmware release")
 
@@ -105,8 +143,31 @@ def update_text_file(path: Path, tag: str, download_url: str) -> bool:
     return True
 
 
-def sync_autoflash(repo: str, project_dir: Path, token: str | None) -> str:
-    release = fetch_latest_firmware_release(repo, token)
+def update_flash_fallback(path: Path, tag: str, download_url: str, firmware_size: int, sha256: str) -> bool:
+    if not path.exists():
+        return False
+
+    original = path.read_text(encoding="utf-8")
+    match = FALLBACK_RELEASE_RE.search(original)
+    if not match:
+        return False
+
+    block = match.group(1)
+    updated_block = VERSION_RE.sub(tag, block)
+    updated_block = DOWNLOAD_URL_RE.sub(download_url, updated_block)
+    updated_block = re.sub(r'(size:\s*)\d+(,)', rf"\g<1>{firmware_size}\2", updated_block, count=1)
+    updated_block = re.sub(r'(sha256:\s*")[0-9a-fA-F]+(")', rf"\g<1>{sha256}\2", updated_block, count=1)
+
+    if updated_block == block:
+        return False
+
+    updated = original[: match.start(1)] + updated_block + original[match.end(1) :]
+    path.write_text(updated, encoding="utf-8", newline="")
+    return True
+
+
+def sync_autoflash(repo: str, project_dir: Path, token: str | None, tag: str | None = None) -> str:
+    release = fetch_firmware_release_by_tag(repo, tag, token) if tag else fetch_latest_firmware_release(repo, token)
     tag = str(release["tag_name"])
     asset = select_firmware_asset(release)
     download_url = str(asset["browser_download_url"])
@@ -157,6 +218,7 @@ def sync_autoflash(repo: str, project_dir: Path, token: str | None) -> str:
 
     for relative in ("README.md", "docs/assets/site.js", "docs/index.html", "docs/flash.html"):
         update_text_file(project_dir / relative, tag, download_url)
+    update_flash_fallback(project_dir / "docs" / "flash.html", tag, download_url, firmware_size, sha256)
 
     env_path = os.environ.get("GITHUB_ENV")
     if env_path:
@@ -174,10 +236,11 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Sync GitHub Pages auto-flash firmware from latest stable release.")
     parser.add_argument("--repo", default=os.environ.get("GITHUB_REPOSITORY", DEFAULT_REPO))
     parser.add_argument("--project-dir", type=Path, default=Path.cwd())
+    parser.add_argument("--tag", default=os.environ.get("AUTOFLASH_TAG"))
     args = parser.parse_args()
 
     try:
-        sync_autoflash(args.repo, args.project_dir.resolve(), os.environ.get("GITHUB_TOKEN"))
+        sync_autoflash(args.repo, args.project_dir.resolve(), os.environ.get("GITHUB_TOKEN"), args.tag)
         return 0
     except Exception as exc:
         print(f"error: {exc}", file=sys.stderr)
