@@ -64,7 +64,7 @@ const std::vector<SettingInfo>& getDeviceDisplaySettings() {
   static const std::vector<SettingInfo> settings = {
       SettingInfo::Enum(StrId::STR_SLEEP_SCREEN, &CrossPointSettings::sleepScreen,
                         {StrId::STR_DARK, StrId::STR_LIGHT, StrId::STR_CUSTOM, StrId::STR_COVER, StrId::STR_NONE_OPT,
-                         StrId::STR_COVER_CUSTOM}),
+                         StrId::STR_COVER_CUSTOM, StrId::STR_READING_DASHBOARD, StrId::STR_COVER_STATS}),
       SettingInfo::Enum(StrId::STR_SLEEP_COVER_MODE, &CrossPointSettings::sleepScreenCoverMode,
                         {StrId::STR_FIT, StrId::STR_CROP}),
       SettingInfo::Enum(StrId::STR_SLEEP_COVER_FILTER, &CrossPointSettings::sleepScreenCoverFilter,
@@ -78,8 +78,7 @@ const std::vector<SettingInfo>& getDeviceDisplaySettings() {
                         {StrId::STR_THEME_LYRA, StrId::STR_THEME_LYRA_CUSTOM, StrId::STR_THEME_LYRA_CAROUSEL}),
       SettingInfo::Enum(StrId::STR_HOME_BOOK_SOURCE, &CrossPointSettings::homeBookSource,
                         {StrId::STR_RECENTS, StrId::STR_FAVORITES}),
-      SettingInfo::Toggle(StrId::STR_ANTI_GHOSTING_EXPERIMENTAL,
-                          &CrossPointSettings::antiGhostingExperimental),
+      SettingInfo::Toggle(StrId::STR_ANTI_GHOSTING_EXPERIMENTAL, &CrossPointSettings::antiGhostingExperimental),
       SettingInfo::Toggle(StrId::STR_DARK_MODE, &CrossPointSettings::darkMode),
       SettingInfo::Toggle(StrId::STR_SUNLIGHT_FADING_FIX, &CrossPointSettings::fadingFix),
   };
@@ -127,8 +126,7 @@ const std::vector<SettingInfo>& getDeviceControlsSettings() {
         SettingInfo::Action(StrId::STR_REMAP_FRONT_BUTTONS, SettingAction::RemapFrontButtons),
         SettingInfo::Enum(StrId::STR_SIDE_BTN_LAYOUT, &CrossPointSettings::sideButtonLayout,
                           {StrId::STR_PREV_NEXT, StrId::STR_NEXT_PREV}),
-        SettingInfo::Toggle(StrId::STR_FRONT_BTN_FOLLOW_ORIENTATION,
-                            &CrossPointSettings::frontButtonFollowOrientation),
+        SettingInfo::Toggle(StrId::STR_FRONT_BTN_FOLLOW_ORIENTATION, &CrossPointSettings::frontButtonFollowOrientation),
         SettingInfo::Enum(StrId::STR_LONG_PRESS_BEHAVIOR, &CrossPointSettings::longPressButtonBehavior,
                           {StrId::STR_LONG_PRESS_BEHAVIOR_OFF, StrId::STR_LONG_PRESS_BEHAVIOR_SKIP,
                            StrId::STR_LONG_PRESS_BEHAVIOR_ORIENTATION}),

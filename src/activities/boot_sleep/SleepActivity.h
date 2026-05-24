@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../Activity.h"
-
 #include <string>
+
+#include "../Activity.h"
 
 class Bitmap;
 
@@ -16,7 +16,10 @@ class SleepActivity final : public Activity {
   void renderDefaultSleepScreen() const;
   void renderCustomSleepScreen() const;
   void renderCoverSleepScreen() const;
+  void renderReadingDashboardSleepScreen() const;
+  void renderCoverStatsSleepScreen() const;
   void renderBitmapSleepScreen(const Bitmap& bitmap, const std::string& sourcePath = "") const;
   bool renderPngSleepScreen(const std::string& sourcePath) const;
   void renderBlankSleepScreen() const;
+  bool resolveLastBookCoverPath(std::string& coverBmpPath) const;
 };

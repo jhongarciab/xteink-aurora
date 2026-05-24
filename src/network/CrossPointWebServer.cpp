@@ -228,40 +228,43 @@ struct WebSettingDef {
   const char* key;
 };
 
-constexpr StrId OPT_SLEEP_SCREEN[] = {StrId::STR_DARK, StrId::STR_LIGHT, StrId::STR_CUSTOM, StrId::STR_COVER,
-                                      StrId::STR_NONE_OPT, StrId::STR_COVER_CUSTOM};
+constexpr StrId OPT_SLEEP_SCREEN[] = {StrId::STR_DARK,
+                                      StrId::STR_LIGHT,
+                                      StrId::STR_CUSTOM,
+                                      StrId::STR_COVER,
+                                      StrId::STR_NONE_OPT,
+                                      StrId::STR_COVER_CUSTOM,
+                                      StrId::STR_READING_DASHBOARD,
+                                      StrId::STR_COVER_STATS};
 constexpr StrId OPT_FIT_CROP[] = {StrId::STR_FIT, StrId::STR_CROP};
 constexpr StrId OPT_SLEEP_FILTER[] = {StrId::STR_NONE_OPT, StrId::STR_FILTER_CONTRAST, StrId::STR_INVERTED};
 constexpr StrId OPT_HIDE_BATTERY[] = {StrId::STR_NEVER, StrId::STR_IN_READER, StrId::STR_ALWAYS};
-constexpr StrId OPT_REFRESH_FREQ[] = {StrId::STR_PAGES_1, StrId::STR_PAGES_5, StrId::STR_PAGES_10,
-                                      StrId::STR_PAGES_15, StrId::STR_PAGES_30};
+constexpr StrId OPT_REFRESH_FREQ[] = {StrId::STR_PAGES_1, StrId::STR_PAGES_5, StrId::STR_PAGES_10, StrId::STR_PAGES_15,
+                                      StrId::STR_PAGES_30};
 constexpr StrId OPT_UI_THEME[] = {StrId::STR_THEME_LYRA, StrId::STR_THEME_LYRA_CUSTOM, StrId::STR_THEME_LYRA_CAROUSEL};
 constexpr StrId OPT_FONT_FAMILY[] = {StrId::STR_BOOKERLY, StrId::STR_NOTO_SANS, StrId::STR_LEXEND};
 constexpr StrId OPT_FONT_SIZE[] = {StrId::STR_X_SMALL, StrId::STR_SMALL, StrId::STR_MEDIUM, StrId::STR_LARGE,
                                    StrId::STR_X_LARGE};
 constexpr StrId OPT_LINE_SPACING[] = {StrId::STR_TIGHT, StrId::STR_NORMAL, StrId::STR_WIDE};
-constexpr StrId OPT_ALIGNMENT[] = {StrId::STR_JUSTIFY, StrId::STR_ALIGN_LEFT, StrId::STR_CENTER,
-                                   StrId::STR_ALIGN_RIGHT, StrId::STR_BOOK_S_STYLE};
+constexpr StrId OPT_ALIGNMENT[] = {StrId::STR_JUSTIFY, StrId::STR_ALIGN_LEFT, StrId::STR_CENTER, StrId::STR_ALIGN_RIGHT,
+                                   StrId::STR_BOOK_S_STYLE};
 constexpr StrId OPT_BIONIC[] = {StrId::STR_STATE_OFF, StrId::STR_NORMAL, StrId::STR_SUBTLE};
 constexpr StrId OPT_ORIENTATION[] = {StrId::STR_PORTRAIT, StrId::STR_LANDSCAPE_CW, StrId::STR_INVERTED,
                                      StrId::STR_LANDSCAPE_CCW};
-constexpr StrId OPT_TEXT_DARKNESS[] = {StrId::STR_NORMAL, StrId::STR_LEGACY_BW, StrId::STR_DARK,
-                                       StrId::STR_EXTRA_DARK};
+constexpr StrId OPT_TEXT_DARKNESS[] = {StrId::STR_NORMAL, StrId::STR_LEGACY_BW, StrId::STR_DARK, StrId::STR_EXTRA_DARK};
 constexpr StrId OPT_READER_REFRESH[] = {StrId::STR_REFRESH_MODE_AUTO, StrId::STR_REFRESH_MODE_FAST,
                                         StrId::STR_REFRESH_MODE_HALF, StrId::STR_REFRESH_MODE_FULL};
 constexpr StrId OPT_IMAGES[] = {StrId::STR_IMAGES_DISPLAY, StrId::STR_IMAGES_PLACEHOLDER, StrId::STR_IMAGES_SUPPRESS};
 constexpr StrId OPT_SIDE_BUTTONS[] = {StrId::STR_PREV_NEXT, StrId::STR_NEXT_PREV};
 constexpr StrId OPT_LONG_PRESS_BEHAVIOR[] = {StrId::STR_LONG_PRESS_BEHAVIOR_OFF, StrId::STR_LONG_PRESS_BEHAVIOR_SKIP,
                                              StrId::STR_LONG_PRESS_BEHAVIOR_ORIENTATION};
-constexpr StrId OPT_SHORT_PWR[] = {StrId::STR_IGNORE, StrId::STR_SLEEP, StrId::STR_PAGE_TURN,
-                                   StrId::STR_FORCE_REFRESH};
+constexpr StrId OPT_SHORT_PWR[] = {StrId::STR_IGNORE, StrId::STR_SLEEP, StrId::STR_PAGE_TURN, StrId::STR_FORCE_REFRESH};
 constexpr StrId OPT_TILT_PAGE_TURN[] = {StrId::STR_STATE_OFF, StrId::STR_NORMAL, StrId::STR_INVERTED};
 constexpr StrId OPT_SLEEP_TIMEOUT[] = {StrId::STR_MIN_1, StrId::STR_MIN_5, StrId::STR_MIN_10, StrId::STR_MIN_15,
                                        StrId::STR_MIN_30};
 constexpr StrId OPT_AUTO_MANUAL[] = {StrId::STR_REFRESH_MODE_AUTO, StrId::STR_MANUAL};
-constexpr StrId OPT_REMINDER_STARTS[] = {StrId::STR_STATE_OFF, StrId::STR_NUM_10, StrId::STR_NUM_20,
-                                         StrId::STR_NUM_30, StrId::STR_NUM_40, StrId::STR_NUM_50,
-                                         StrId::STR_NUM_60};
+constexpr StrId OPT_REMINDER_STARTS[] = {StrId::STR_STATE_OFF, StrId::STR_NUM_10, StrId::STR_NUM_20, StrId::STR_NUM_30,
+                                         StrId::STR_NUM_40,    StrId::STR_NUM_50, StrId::STR_NUM_60};
 constexpr StrId OPT_DATE_FORMAT[] = {StrId::STR_DATE_FORMAT_DD_MM_YYYY, StrId::STR_DATE_FORMAT_MM_DD_YYYY,
                                      StrId::STR_DATE_FORMAT_YYYY_MM_DD};
 constexpr StrId OPT_DAILY_GOAL[] = {StrId::STR_MIN_15, StrId::STR_MIN_30, StrId::STR_MIN_45, StrId::STR_MIN_60};
@@ -278,13 +281,35 @@ constexpr StrId OPT_BAR_THICKNESS[] = {StrId::STR_PROGRESS_BAR_THIN, StrId::STR_
                                        StrId::STR_PROGRESS_BAR_THICK};
 constexpr StrId OPT_XTC_STATUS_BAR[] = {StrId::STR_HIDE, StrId::STR_BOTTOM, StrId::STR_TOP};
 
-#define WEB_TOGGLE(name, member, key, category) \
-  {name, category, WebSettingType::Toggle, &CrossPointSettings::member, nullptr, 0, 0, 0, 0, WebDynamicSetting::None, key}
-#define WEB_ENUM(name, member, opts, key, category)                                                        \
-  {name, category, WebSettingType::Enum, &CrossPointSettings::member, opts, static_cast<uint8_t>(sizeof(opts) / sizeof(opts[0])), 0, 0, 0, WebDynamicSetting::None, key}
+#define WEB_TOGGLE(name, member, key, category)                                                                       \
+  {name, category, WebSettingType::Toggle, &CrossPointSettings::member, nullptr, 0, 0, 0, 0, WebDynamicSetting::None, \
+   key}
+#define WEB_ENUM(name, member, opts, key, category)      \
+  {name,                                                 \
+   category,                                             \
+   WebSettingType::Enum,                                 \
+   &CrossPointSettings::member,                          \
+   opts,                                                 \
+   static_cast<uint8_t>(sizeof(opts) / sizeof(opts[0])), \
+   0,                                                    \
+   0,                                                    \
+   0,                                                    \
+   WebDynamicSetting::None,                              \
+   key}
 #define WEB_VALUE(name, member, lo, hi, inc, key, category) \
-  {name, category, WebSettingType::Value, &CrossPointSettings::member, nullptr, 0, lo, hi, inc, WebDynamicSetting::None, key}
-#define WEB_DYNAMIC(name, kind, type, opts, key, category)                                                  \
+  {                                                         \
+      name,                                                 \
+      category,                                             \
+      WebSettingType::Value,                                \
+      &CrossPointSettings::member,                          \
+      nullptr,                                              \
+      0,                                                    \
+      lo,                                                   \
+      hi,                                                   \
+      inc,                                                  \
+      WebDynamicSetting::None,                              \
+      key}
+#define WEB_DYNAMIC(name, kind, type, opts, key, category) \
   {name, category, type, nullptr, opts, static_cast<uint8_t>(sizeof(opts) / sizeof(opts[0])), 0, 0, 0, kind, key}
 #define WEB_DYNAMIC_STRING(name, kind, key, category) \
   {name, category, WebSettingType::String, nullptr, nullptr, 0, 0, 0, 0, kind, key}
@@ -326,8 +351,8 @@ constexpr WebSettingDef WEB_SETTINGS[] = {
 
     WEB_ENUM(StrId::STR_SIDE_BTN_LAYOUT, sideButtonLayout, OPT_SIDE_BUTTONS, "sideButtonLayout",
              StrId::STR_CAT_CONTROLS),
-    WEB_TOGGLE(StrId::STR_FRONT_BTN_FOLLOW_ORIENTATION, frontButtonFollowOrientation,
-               "frontButtonFollowOrientation", StrId::STR_CAT_CONTROLS),
+    WEB_TOGGLE(StrId::STR_FRONT_BTN_FOLLOW_ORIENTATION, frontButtonFollowOrientation, "frontButtonFollowOrientation",
+               StrId::STR_CAT_CONTROLS),
     WEB_ENUM(StrId::STR_LONG_PRESS_BEHAVIOR, longPressButtonBehavior, OPT_LONG_PRESS_BEHAVIOR,
              "longPressButtonBehavior", StrId::STR_CAT_CONTROLS),
     WEB_ENUM(StrId::STR_SHORT_PWR_BTN, shortPwrBtn, OPT_SHORT_PWR, "shortPwrBtn", StrId::STR_CAT_CONTROLS),
@@ -338,8 +363,8 @@ constexpr WebSettingDef WEB_SETTINGS[] = {
 
     WEB_TOGGLE(StrId::STR_DISPLAY_DAY, displayDay, "displayDay", StrId::STR_APPS),
     WEB_ENUM(StrId::STR_CHOOSE_WIFI, syncDayWifiChoice, OPT_AUTO_MANUAL, "syncDayWifiChoice", StrId::STR_APPS),
-    WEB_ENUM(StrId::STR_SYNC_DAY_REMINDER_EVERY, syncDayReminderStarts, OPT_REMINDER_STARTS,
-             "syncDayReminderStarts", StrId::STR_APPS),
+    WEB_ENUM(StrId::STR_SYNC_DAY_REMINDER_EVERY, syncDayReminderStarts, OPT_REMINDER_STARTS, "syncDayReminderStarts",
+             StrId::STR_APPS),
     WEB_ENUM(StrId::STR_DATE_FORMAT, dateFormat, OPT_DATE_FORMAT, "dateFormat", StrId::STR_APPS),
     WEB_ENUM(StrId::STR_DAILY_GOAL, dailyGoalTarget, OPT_DAILY_GOAL, "dailyGoalTarget", StrId::STR_APPS),
     WEB_ENUM(StrId::STR_STUDY_MODE, flashcardStudyMode, OPT_STUDY_MODE, "flashcardStudyMode", StrId::STR_APPS),
@@ -375,8 +400,7 @@ constexpr WebSettingDef WEB_SETTINGS[] = {
              StrId::STR_SHORTCUTS_SECTION),
     WEB_ENUM(StrId::STR_FILE_TRANSFER, fileTransferShortcut, OPT_SHORTCUT_LOCATION, "fileTransferShortcut",
              StrId::STR_SHORTCUTS_SECTION),
-    WEB_ENUM(StrId::STR_SLEEP, sleepShortcut, OPT_SHORTCUT_LOCATION, "sleepShortcut",
-             StrId::STR_SHORTCUTS_SECTION),
+    WEB_ENUM(StrId::STR_SLEEP, sleepShortcut, OPT_SHORTCUT_LOCATION, "sleepShortcut", StrId::STR_SHORTCUTS_SECTION),
 
     WEB_DYNAMIC_STRING(StrId::STR_KOREADER_USERNAME, WebDynamicSetting::KoUsername, "koUsername",
                        StrId::STR_KOREADER_SYNC),
@@ -386,8 +410,7 @@ constexpr WebSettingDef WEB_SETTINGS[] = {
                        StrId::STR_KOREADER_SYNC),
     WEB_DYNAMIC(StrId::STR_DOCUMENT_MATCHING, WebDynamicSetting::KoMatchMethod, WebSettingType::Enum, OPT_KO_MATCH,
                 "koMatchMethod", StrId::STR_KOREADER_SYNC),
-    WEB_TOGGLE(StrId::STR_KO_AUTO_PULL_ON_OPEN, koSyncAutoPullOnOpen, "koSyncAutoPullOnOpen",
-               StrId::STR_KOREADER_SYNC),
+    WEB_TOGGLE(StrId::STR_KO_AUTO_PULL_ON_OPEN, koSyncAutoPullOnOpen, "koSyncAutoPullOnOpen", StrId::STR_KOREADER_SYNC),
     WEB_TOGGLE(StrId::STR_KO_AUTO_PUSH_ON_CLOSE, koSyncAutoPushOnClose, "koSyncAutoPushOnClose",
                StrId::STR_KOREADER_SYNC),
     WEB_ENUM(StrId::STR_OPDS_FILENAME_FORMAT, opdsFilenameFormat, OPT_OPDS_FILENAME_FORMAT, "opdsFilenameFormat",
@@ -395,8 +418,8 @@ constexpr WebSettingDef WEB_SETTINGS[] = {
 
     WEB_TOGGLE(StrId::STR_CHAPTER_PAGE_COUNT, statusBarChapterPageCount, "statusBarChapterPageCount",
                StrId::STR_CUSTOMISE_STATUS_BAR),
-    WEB_TOGGLE(StrId::STR_BOOK_PROGRESS_PERCENTAGE, statusBarBookProgressPercentage,
-               "statusBarBookProgressPercentage", StrId::STR_CUSTOMISE_STATUS_BAR),
+    WEB_TOGGLE(StrId::STR_BOOK_PROGRESS_PERCENTAGE, statusBarBookProgressPercentage, "statusBarBookProgressPercentage",
+               StrId::STR_CUSTOMISE_STATUS_BAR),
     WEB_ENUM(StrId::STR_PROGRESS_BAR, statusBarProgressBar, OPT_BOOK_CHAPTER_HIDE, "statusBarProgressBar",
              StrId::STR_CUSTOMISE_STATUS_BAR),
     WEB_ENUM(StrId::STR_PROGRESS_BAR_THICKNESS, statusBarProgressBarThickness, OPT_BAR_THICKNESS,
