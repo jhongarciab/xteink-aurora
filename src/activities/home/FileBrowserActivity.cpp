@@ -4,6 +4,7 @@
 #include <GfxRenderer.h>
 #include <HalStorage.h>
 #include <I18n.h>
+#include <Memory.h>
 
 #include <algorithm>
 
@@ -17,6 +18,7 @@
 
 namespace {
 constexpr unsigned long GO_HOME_MS = 1000;
+constexpr size_t NAME_BUFFER_SIZE = 500;
 }  // namespace
 
 void sortFileList(std::vector<std::string>& strs) {
@@ -83,23 +85,28 @@ void FileBrowserActivity::loadFiles() {
 
   root.rewindDirectory();
 
-  char name[500];
+  if (!fileNameBuffer) {
+    LOG_ERR("FileBrowser", "fileNameBuffer not allocated");
+    root.close();
+    return;
+  }
+
   for (auto file = root.openNextFile(); file; file = root.openNextFile()) {
-    file.getName(name, sizeof(name));
-    if ((!SETTINGS.showHiddenFiles && name[0] == '.') || strcmp(name, "System Volume Information") == 0) {
+    file.getName(fileNameBuffer.get(), NAME_BUFFER_SIZE);
+    if ((!SETTINGS.showHiddenFiles && fileNameBuffer[0] == '.') ||
+        strcmp(fileNameBuffer.get(), "System Volume Information") == 0) {
       file.close();
       continue;
     }
 
     if (file.isDirectory()) {
-      files.emplace_back(std::string(name) + "/");
+      files.emplace_back(std::string(fileNameBuffer.get()) + "/");
     } else {
-      std::string_view filename{name};
+      std::string_view filename{fileNameBuffer.get()};
       if ((mode == Mode::PickFirmware && FsHelpers::checkFileExtension(filename, ".bin")) ||
-          (mode == Mode::Books &&
-           (FsHelpers::hasEpubExtension(filename) || FsHelpers::hasXtcExtension(filename) ||
-            FsHelpers::hasTxtExtension(filename) || FsHelpers::hasMarkdownExtension(filename) ||
-            FsHelpers::hasBmpExtension(filename)))) {
+          (mode == Mode::Books && (FsHelpers::hasEpubExtension(filename) || FsHelpers::hasXtcExtension(filename) ||
+                                   FsHelpers::hasTxtExtension(filename) || FsHelpers::hasMarkdownExtension(filename) ||
+                                   FsHelpers::hasBmpExtension(filename)))) {
         files.emplace_back(filename);
       }
     }
@@ -127,6 +134,12 @@ void FileBrowserActivity::loadFiles() {
 
 void FileBrowserActivity::onEnter() {
   Activity::onEnter();
+
+  fileNameBuffer = makeUniqueNoThrow<char[]>(NAME_BUFFER_SIZE);
+  if (!fileNameBuffer) {
+    LOG_ERR("FileBrowser", "malloc failed for name buffer");
+    return;
+  }
 
   selectorIndex = 0;
 
@@ -157,10 +170,88 @@ void FileBrowserActivity::onExit() {
   Activity::onExit();
   files.clear();
   completedFileStates.clear();
+  fileNameBuffer.reset();
 }
 
-void FileBrowserActivity::clearFileMetadata(const std::string& fullPath) {
-  clearBookCache(fullPath);
+// To avoid traversing directories twice (once for cache clearing, once for deletion),
+// we do both in one pass here, instead of using Storage.removeDir
+bool FileBrowserActivity::removeDirFile(const std::string& fullPath) {
+  auto file = Storage.open(fullPath.c_str());
+  if (!file) {
+    LOG_ERR("FileBrowser", "Failed to open for metadata clearing: %s", fullPath.c_str());
+    return false;
+  }
+
+  if (!file.isDirectory()) {
+    file.close();
+    clearBookCache(fullPath);
+    return Storage.remove(fullPath.c_str());
+  }
+  file.close();
+
+  if (!fileNameBuffer) {
+    LOG_ERR("FileBrowser", "fileNameBuffer not allocated");
+    return false;
+  }
+
+  // Stack of (dirPath, postOrder): postOrder=true means rmdir this path after children are processed.
+  std::vector<std::pair<std::string, bool>> stack;
+  stack.reserve(16);
+  stack.push_back({fullPath, false});
+
+  while (!stack.empty()) {
+    auto [currentPath, postOrder] = std::move(stack.back());
+    stack.pop_back();
+
+    if (postOrder) {
+      if (!Storage.rmdir(currentPath.c_str())) {
+        LOG_ERR("FileBrowser", "Failed to rmdir: %s", currentPath.c_str());
+        return false;
+      }
+      continue;
+    }
+
+    auto dir = Storage.open(currentPath.c_str());
+    if (!dir) {
+      LOG_ERR("FileBrowser", "Failed to open dir: %s", currentPath.c_str());
+      return false;
+    }
+    if (!dir.isDirectory()) {
+      LOG_ERR("FileBrowser", "Not a directory: %s", currentPath.c_str());
+      return false;
+    }
+
+    // Push this dir for post-order rmdir (after all children are processed).
+    stack.push_back({currentPath, true});
+
+    dir.rewindDirectory();
+    for (auto entry = dir.openNextFile(); entry; entry = dir.openNextFile()) {
+      entry.getName(fileNameBuffer.get(), NAME_BUFFER_SIZE);
+      if (strcmp(fileNameBuffer.get(), ".") == 0 || strcmp(fileNameBuffer.get(), "..") == 0) {
+        continue;
+      }
+      std::string entryPath = currentPath;
+      if (entryPath.back() != '/') {
+        entryPath += "/";
+      }
+      entryPath += fileNameBuffer.get();
+
+      const bool isDir = entry.isDirectory();
+      entry.close();
+
+      if (isDir) {
+        stack.push_back({std::move(entryPath), false});
+      } else {
+        clearBookCache(entryPath);
+        if (!Storage.remove(entryPath.c_str())) {
+          LOG_ERR("FileBrowser", "Failed to remove file: %s", entryPath.c_str());
+          return false;
+        }
+      }
+    }
+  }
+
+  return true;
 }
 
 void FileBrowserActivity::loop() {
@@ -190,8 +281,8 @@ void FileBrowserActivity::loop() {
     const std::string& entry = files[selectorIndex];
     bool isDirectory = (entry.back() == '/');
 
-    if (mappedInput.getHeldTime() >= GO_HOME_MS && !isDirectory) {
-      // --- LONG PRESS ACTION: DELETE FILE ---
+    if (mode == Mode::Books && mappedInput.getHeldTime() >= GO_HOME_MS) {
+      // --- LONG PRESS ACTION: DELETE FILE OR DIRECTORY ---
       std::string cleanBasePath = basepath;
       if (cleanBasePath.back() != '/') cleanBasePath += "/";
       const std::string fullPath = cleanBasePath + entry;
@@ -199,8 +290,7 @@ void FileBrowserActivity::loop() {
       auto handler = [this, fullPath](const ActivityResult& res) {
         if (!res.isCancelled) {
           LOG_DBG("FileBrowser", "Attempting to delete: %s", fullPath.c_str());
-          clearFileMetadata(fullPath);
-          if (Storage.remove(fullPath.c_str())) {
+          if (removeDirFile(fullPath)) {
             LOG_DBG("FileBrowser", "Deleted successfully");
             loadFiles();
             if (files.empty()) {
@@ -222,7 +312,7 @@ void FileBrowserActivity::loop() {
       std::string heading = tr(STR_DELETE) + std::string("? ");
 
       startActivityForResult(std::make_unique<ConfirmationActivity>(renderer, mappedInput, heading, entry), handler);
-    return;
+      return;
     }
 
     if (basepath.back() != '/') basepath += "/";

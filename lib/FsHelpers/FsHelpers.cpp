@@ -59,8 +59,6 @@ void sortFileList(std::vector<std::string>& strs) {
       // Check if both are at the start of a number
       if (isdigit(*s1) && isdigit(*s2)) {
         // Skip leading zeros and track them
-        const char* start1 = s1;
-        const char* start2 = s2;
         while (*s1 == '0') s1++;
         while (*s2 == '0') s2++;
 
@@ -132,6 +130,8 @@ bool hasTxtExtension(std::string_view fileName) { return checkFileExtension(file
 bool hasMarkdownExtension(std::string_view fileName) {
   return checkFileExtension(fileName, ".md") || checkFileExtension(fileName, ".markdown");
 }
+
+bool hasCssExtension(std::string_view fileName) { return checkFileExtension(fileName, ".css"); }
 
 std::string extractFolderPath(const std::string& filePath) {
   const auto lastSlash = filePath.find_last_of('/');

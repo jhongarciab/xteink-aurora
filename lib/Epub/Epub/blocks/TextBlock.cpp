@@ -16,9 +16,7 @@ constexpr int UNDERLINE_BASELINE_OFFSET_PX = 6;
 // Bionic Reading helpers — no heap, no std::string, stack-only slicing.
 
 // Faithful port of metaguiding.py:78 — midpoint = 1 if n in (1,3) else ceil(n/2)
-static constexpr int bionicMidpoint(int n) {
-  return (n == 1 || n == 3) ? 1 : (n + 1) / 2;
-}
+static constexpr int bionicMidpoint(int n) { return (n == 1 || n == 3) ? 1 : (n + 1) / 2; }
 
 // Count UTF-8 codepoints in [begin, end) by skipping continuation bytes.
 static int utf8CodepointCount(const char* begin, const char* end) {
@@ -87,17 +85,25 @@ void TextBlock::render(const GfxRenderer& renderer, const int fontId, const int 
     return;
   }
 
+  const int ascender = renderer.getFontAscenderSize(fontId);
   for (size_t i = 0; i < words.size(); i++) {
     const int wordX = wordXpos[i] + x;
     const EpdFontFamily::Style currentStyle = wordStyles[i];
     const std::string& w = words[i];
 
+    // SUP/SUB shifts are relative to the full-size ascender; glyphs are scaled in drawText.
+    int wordY = y;
+    if ((currentStyle & EpdFontFamily::SUP) != 0) {
+      wordY -= ascender * 2 / 5;
+    } else if ((currentStyle & EpdFontFamily::SUB) != 0) {
+      wordY += ascender / 4;
+    }
+
     // Fast paths: bionic off, already-bold, or word too long for stack slice buffer.
     const bool alreadyBold = (currentStyle & EpdFontFamily::BOLD) != 0;
-    const bool bionicEnabled =
-        bionicReadingMode == BIONIC_READING_NORMAL || bionicReadingMode == BIONIC_READING_SUBTLE;
+    const bool bionicEnabled = bionicReadingMode == BIONIC_READING_NORMAL || bionicReadingMode == BIONIC_READING_SUBTLE;
     if (bionicReadingMode == BIONIC_READING_OFF || !bionicEnabled || alreadyBold || w.size() >= 128) {
-      renderer.drawText(fontId, wordX, y, w.c_str(), true, currentStyle);
+      renderer.drawText(fontId, wordX, wordY, w.c_str(), true, currentStyle);
     } else {
       // Stack slice buffer (<128 bytes, well within CLAUDE.md <256 byte rule).
       char buf[128];
@@ -112,7 +118,7 @@ void TextBlock::render(const GfxRenderer& renderer, const int fontId, const int 
           const size_t n = j - i0;
           memcpy(buf, w.data() + i0, n);
           buf[n] = '\0';
-          renderer.drawText(fontId, cursorX, y, buf, true, currentStyle);
+          renderer.drawText(fontId, cursorX, wordY, buf, true, currentStyle);
           cursorX += renderer.getTextAdvanceX(fontId, buf, currentStyle);
           i0 = j;
           if (i0 >= w.size()) break;
@@ -144,16 +150,16 @@ void TextBlock::render(const GfxRenderer& renderer, const int fontId, const int 
           memcpy(buf, w.data() + i0, n);
           buf[n] = '\0';
           if (bionicReadingMode == BIONIC_READING_SUBTLE) {
-            renderer.drawText(fontId, cursorX, y, buf, true, currentStyle);
-            renderer.drawText(fontId, cursorX + 1, y, buf, true, currentStyle);
+            renderer.drawText(fontId, cursorX, wordY, buf, true, currentStyle);
+            renderer.drawText(fontId, cursorX + 1, wordY, buf, true, currentStyle);
             cursorX += renderer.getTextAdvanceX(fontId, buf, currentStyle);
           } else {
             // Use synthetic bold (double strike) instead of switching to a true BOLD face.
             // Some EPUB fonts miss or mismatch bold glyph metrics, which can corrupt layout.
-            renderer.drawText(fontId, cursorX, y, buf, true, currentStyle);
+            renderer.drawText(fontId, cursorX, wordY, buf, true, currentStyle);
             if (renderer.getRenderMode() == GfxRenderer::BW) {
-              renderer.drawText(fontId, cursorX + 1, y, buf, true, currentStyle);
-              renderer.drawText(fontId, cursorX + 2, y, buf, true, currentStyle);
+              renderer.drawText(fontId, cursorX + 1, wordY, buf, true, currentStyle);
+              renderer.drawText(fontId, cursorX + 2, wordY, buf, true, currentStyle);
             }
             cursorX += renderer.getTextAdvanceX(fontId, buf, currentStyle);
           }
@@ -164,7 +170,7 @@ void TextBlock::render(const GfxRenderer& renderer, const int fontId, const int 
           const size_t n = k - splitByte;
           memcpy(buf, w.data() + splitByte, n);
           buf[n] = '\0';
-          renderer.drawText(fontId, cursorX, y, buf, true, currentStyle);
+          renderer.drawText(fontId, cursorX, wordY, buf, true, currentStyle);
           cursorX += renderer.getTextAdvanceX(fontId, buf, currentStyle);
         }
 
@@ -180,12 +186,12 @@ void TextBlock::render(const GfxRenderer& renderer, const int fontId, const int 
         continue;
       }
       if (hasStrikethrough) {
-        const int strikeY = y + renderer.getFontAscenderSize(fontId) * STRIKETHROUGH_ASCENDER_PERCENT / 100;
+        const int strikeY = wordY + ascender * STRIKETHROUGH_ASCENDER_PERCENT / 100;
         drawDecorationLine(renderer, decoration.startX, strikeY, decoration.width);
       }
       if (hasUnderline) {
         // y is the top of the text line; add ascender to reach baseline, then offset below.
-        const int underlineY = y + renderer.getFontAscenderSize(fontId) + UNDERLINE_BASELINE_OFFSET_PX;
+        const int underlineY = wordY + ascender + UNDERLINE_BASELINE_OFFSET_PX;
         drawDecorationLine(renderer, decoration.startX, underlineY, decoration.width);
       }
     }
@@ -260,7 +266,6 @@ std::unique_ptr<TextBlock> TextBlock::deserialize(FsFile& file) {
   serialization::readPod(file, blockStyle.textIndent);
   serialization::readPod(file, blockStyle.textIndentDefined);
 
-  return std::unique_ptr<TextBlock>(
-      new TextBlock(std::move(words), std::move(wordXpos), std::move(wordStyles), std::vector<uint8_t>{},
-                    std::vector<uint16_t>{}, blockStyle));
+  return std::unique_ptr<TextBlock>(new TextBlock(std::move(words), std::move(wordXpos), std::move(wordStyles),
+                                                  std::vector<uint8_t>{}, std::vector<uint16_t>{}, blockStyle));
 }

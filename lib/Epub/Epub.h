@@ -35,6 +35,7 @@ class Epub {
   bool parseTocNcxFile() const;
   bool parseTocNavFile() const;
   void parseCssFiles() const;
+  void discoverCssFilesFromZip();
   bool generateThumbBmpToPath(int width, int height, const std::string& thumbPath) const;
 
  public:

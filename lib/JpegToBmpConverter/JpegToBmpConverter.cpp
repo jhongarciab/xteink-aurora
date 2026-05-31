@@ -22,8 +22,8 @@ inline uint16_t exifU16(const uint8_t* p, bool le) {
             : ((static_cast<uint16_t>(p[0]) << 8) | p[1]);
 }
 inline uint32_t exifU32(const uint8_t* p, bool le) {
-  return le ? (static_cast<uint32_t>(p[0]) | (static_cast<uint32_t>(p[1]) << 8) |
-               (static_cast<uint32_t>(p[2]) << 16) | (static_cast<uint32_t>(p[3]) << 24))
+  return le ? (static_cast<uint32_t>(p[0]) | (static_cast<uint32_t>(p[1]) << 8) | (static_cast<uint32_t>(p[2]) << 16) |
+               (static_cast<uint32_t>(p[3]) << 24))
             : ((static_cast<uint32_t>(p[0]) << 24) | (static_cast<uint32_t>(p[1]) << 16) |
                (static_cast<uint32_t>(p[2]) << 8) | p[3]);
 }
@@ -56,8 +56,8 @@ ExifThumbInfo findExifThumbnail(FsFile& file) {
 
     if (marker == 0xE1) {  // APP1
       // Check for "Exif\0\0" signature
-      if (segLen < 8 || file.read(buf, 6) != 6 || buf[0] != 'E' || buf[1] != 'x' || buf[2] != 'i' ||
-          buf[3] != 'f' || buf[4] != 0 || buf[5] != 0) {
+      if (segLen < 8 || file.read(buf, 6) != 6 || buf[0] != 'E' || buf[1] != 'x' || buf[2] != 'i' || buf[3] != 'f' ||
+          buf[4] != 0 || buf[5] != 0) {
         if (!file.seek(segEnd)) return result;
         continue;
       }
@@ -93,16 +93,19 @@ ExifThumbInfo findExifThumbnail(FsFile& file) {
         if (file.read(buf, 12) != 12) return result;
         const uint16_t tag = exifU16(buf, le);
         const uint32_t val = exifU32(buf + 8, le);
-        if      (tag == 0x0103) isJpeg   = (val == 6);
-        else if (tag == 0x0201) thumbOff = val;
-        else if (tag == 0x0202) thumbLen = val;
+        if (tag == 0x0103)
+          isJpeg = (val == 6);
+        else if (tag == 0x0201)
+          thumbOff = val;
+        else if (tag == 0x0202)
+          thumbLen = val;
       }
 
       if (!isJpeg || thumbOff == 0 || thumbLen == 0) return result;
 
       result.offset = static_cast<uint32_t>(tiffBase) + thumbOff;
       result.length = thumbLen;
-      result.found  = true;
+      result.found = true;
       return result;
 
     } else if (marker == 0xD9 || marker == 0xDA) {
@@ -424,6 +427,14 @@ int bmpDrawCallback(JPEGDRAW* pDraw) {
   const int blockX = pDraw->x;
   const int blockY = pDraw->y;
 
+  // Guard against unexpected callback geometry so we never index past row buffers.
+  if (blockX < 0 || blockY < 0 || blockX >= ctx->srcWidth || blockY >= ctx->srcHeight) {
+    LOG_ERR("JPG", "Unexpected JPEG block origin (%d,%d) for decode grid %dx%d", blockX, blockY, ctx->srcWidth,
+            ctx->srcHeight);
+    ctx->error = true;
+    return 0;
+  }
+
   // Copy block pixels into MCU row buffer
   for (int r = 0; r < blockH && r < MAX_MCU_HEIGHT; r++) {
     const int copyW = (blockX + validW <= ctx->srcWidth) ? validW : (ctx->srcWidth - blockX);
@@ -485,7 +496,9 @@ bool JpegToBmpConverter::jpegFileToBmpStreamInternal(FsFile& jpegFile, Print& bm
   // Helper: mark a failure as permanent (bad JPEG data) or transient (OOM).
   // Permanent = the same JPEG bytes will always fail; writing a sentinel stops endless retries.
   // Transient = might succeed later if memory frees up; no sentinel should be written.
-  auto setPermanent = [&](bool permanent) { if (permanentFailure) *permanentFailure = permanent; };
+  auto setPermanent = [&](bool permanent) {
+    if (permanentFailure) *permanentFailure = permanent;
+  };
   LOG_DBG("JPG", "Converting JPEG to %s BMP (target: %dx%d)", oneBit ? "1-bit" : "2-bit", targetWidth, targetHeight);
 
   if (ESP.getFreeHeap() < MIN_FREE_HEAP) {
@@ -514,8 +527,16 @@ bool JpegToBmpConverter::jpegFileToBmpStreamInternal(FsFile& jpegFile, Print& bm
 
   const int srcWidth = jpeg->getWidth();
   const int srcHeight = jpeg->getHeight();
+  const bool progressiveDecode = (jpeg->getJPEGType() == JPEG_MODE_PROGRESSIVE);
+  // JPEGDEC forces progressive streams to JPEG_SCALE_EIGHTH in DecodeJPEG,
+  // so callback coordinates and MCU buffering must use the reduced decode grid.
+  const int decodedSrcWidth = progressiveDecode ? ((srcWidth + 7) >> 3) : srcWidth;
+  const int decodedSrcHeight = progressiveDecode ? ((srcHeight + 7) >> 3) : srcHeight;
 
   LOG_DBG("JPG", "JPEG dimensions: %dx%d", srcWidth, srcHeight);
+  if (progressiveDecode) {
+    LOG_DBG("JPG", "Progressive JPEG decode uses 1/8 source: %dx%d", decodedSrcWidth, decodedSrcHeight);
+  }
 
   constexpr int MAX_IMAGE_WIDTH = 2048;
   constexpr int MAX_IMAGE_HEIGHT = 3072;
@@ -530,6 +551,15 @@ bool JpegToBmpConverter::jpegFileToBmpStreamInternal(FsFile& jpegFile, Print& bm
   // Calculate output dimensions (pre-scale to fit display exactly)
   int outWidth = srcWidth;
   int outHeight = srcHeight;
+  if (targetWidth <= 0 || targetHeight <= 0) {
+    // Without an explicit target, keep decoder-native dimensions.
+    outWidth = decodedSrcWidth;
+    outHeight = decodedSrcHeight;
+  }
+
+  const int scaleSrcWidth = decodedSrcWidth;
+  const int scaleSrcHeight = decodedSrcHeight;
+
   uint32_t scaleX_fp = 65536;  // 1.0 in 16.16 fixed point
   uint32_t scaleY_fp = 65536;
   bool needsScaling = false;
@@ -549,12 +579,14 @@ bool JpegToBmpConverter::jpegFileToBmpStreamInternal(FsFile& jpegFile, Print& bm
     if (outWidth < 1) outWidth = 1;
     if (outHeight < 1) outHeight = 1;
 
-    scaleX_fp = (static_cast<uint32_t>(srcWidth) << 16) / outWidth;
-    scaleY_fp = (static_cast<uint32_t>(srcHeight) << 16) / outHeight;
-    needsScaling = true;
+    LOG_DBG("JPG", "Scaling source %dx%d (decode grid %dx%d) -> %dx%d (target %dx%d)", srcWidth, srcHeight,
+            scaleSrcWidth, scaleSrcHeight, outWidth, outHeight, targetWidth, targetHeight);
+  }
 
-    LOG_DBG("JPG", "Scaling %dx%d -> %dx%d (target %dx%d)", srcWidth, srcHeight, outWidth, outHeight, targetWidth,
-            targetHeight);
+  if (scaleSrcWidth != outWidth || scaleSrcHeight != outHeight) {
+    scaleX_fp = (static_cast<uint32_t>(scaleSrcWidth) << 16) / outWidth;
+    scaleY_fp = (static_cast<uint32_t>(scaleSrcHeight) << 16) / outHeight;
+    needsScaling = true;
   }
 
   // Write BMP header with output dimensions
@@ -572,8 +604,8 @@ bool JpegToBmpConverter::jpegFileToBmpStreamInternal(FsFile& jpegFile, Print& bm
 
   BmpConvertCtx ctx = {};
   ctx.bmpOut = &bmpOut;
-  ctx.srcWidth = srcWidth;
-  ctx.srcHeight = srcHeight;
+  ctx.srcWidth = scaleSrcWidth;
+  ctx.srcHeight = scaleSrcHeight;
   ctx.outWidth = outWidth;
   ctx.outHeight = outHeight;
   ctx.oneBit = oneBit;
@@ -583,14 +615,14 @@ bool JpegToBmpConverter::jpegFileToBmpStreamInternal(FsFile& jpegFile, Print& bm
   ctx.scaleY_fp = scaleY_fp;
   ctx.error = false;
 
-  // MCU row buffer: MAX_MCU_HEIGHT rows × srcWidth columns of grayscale
-  ctx.mcuBuf = makeUniqueNoThrow<uint8_t[]>(MAX_MCU_HEIGHT * srcWidth);
+  // MCU row buffer: MAX_MCU_HEIGHT rows × decoded srcWidth columns of grayscale
+  ctx.mcuBuf = makeUniqueNoThrow<uint8_t[]>(MAX_MCU_HEIGHT * ctx.srcWidth);
   if (!ctx.mcuBuf) {
-    LOG_ERR("JPG", "OOM: MCU buffer (%d bytes)", MAX_MCU_HEIGHT * srcWidth);
+    LOG_ERR("JPG", "OOM: MCU buffer (%d bytes)", MAX_MCU_HEIGHT * ctx.srcWidth);
     setPermanent(false);  // transient: OOM
     return false;
   }
-  memset(ctx.mcuBuf.get(), 0, MAX_MCU_HEIGHT * srcWidth);
+  memset(ctx.mcuBuf.get(), 0, MAX_MCU_HEIGHT * ctx.srcWidth);
 
   ctx.bmpRow = makeUniqueNoThrow<uint8_t[]>(bytesPerRow);
   if (!ctx.bmpRow) {
@@ -671,10 +703,9 @@ bool JpegToBmpConverter::jpegFileTo1BitBmpStreamWithSize(FsFile& jpegFile, Print
 }
 
 // Exif thumbnail fallback for progressive / otherwise undecodable JPEGs.
-bool JpegToBmpConverter::jpegExifThumbnailTo1BitBmpStreamWithSize(FsFile& jpegFile,
-                                                                   const std::string& tempThumbPath, Print& bmpOut,
-                                                                   int targetMaxWidth, int targetMaxHeight,
-                                                                   bool* permanentFailure) {
+bool JpegToBmpConverter::jpegExifThumbnailTo1BitBmpStreamWithSize(FsFile& jpegFile, const std::string& tempThumbPath,
+                                                                  Print& bmpOut, int targetMaxWidth,
+                                                                  int targetMaxHeight, bool* permanentFailure) {
   const ExifThumbInfo thumb = findExifThumbnail(jpegFile);
   if (!thumb.found) {
     LOG_DBG("JPG", "No Exif JPEG thumbnail found in JPEG");
@@ -722,8 +753,8 @@ bool JpegToBmpConverter::jpegExifThumbnailTo1BitBmpStreamWithSize(FsFile& jpegFi
     return false;
   }
 
-  const bool ok = jpegFileToBmpStreamInternal(thumbFile, bmpOut, targetMaxWidth, targetMaxHeight, true, true,
-                                              permanentFailure);
+  const bool ok =
+      jpegFileToBmpStreamInternal(thumbFile, bmpOut, targetMaxWidth, targetMaxHeight, true, true, permanentFailure);
   thumbFile.close();
   Storage.remove(tempThumbPath.c_str());
   return ok;

@@ -12,6 +12,7 @@
 #include <cstdint>
 #include <cstring>
 #include <iterator>
+#include <new>
 
 #include "../../Epub.h"
 #include "../Page.h"
@@ -74,12 +75,12 @@ void ChapterHtmlSlimParser::updateEffectiveInlineStyle() {
   // Start with block-level styles
   effectiveBold = currentCssStyle.hasFontWeight() && currentCssStyle.fontWeight == CssFontWeight::Bold;
   effectiveItalic = currentCssStyle.hasFontStyle() && currentCssStyle.fontStyle == CssFontStyle::Italic;
-  effectiveUnderline =
-      currentCssStyle.hasTextDecoration() &&
-      hasTextDecoration(currentCssStyle.textDecoration, CssTextDecoration::Underline);
-  effectiveStrikeThrough =
-      currentCssStyle.hasTextDecoration() &&
-      hasTextDecoration(currentCssStyle.textDecoration, CssTextDecoration::LineThrough);
+  effectiveUnderline = currentCssStyle.hasTextDecoration() &&
+                       hasTextDecoration(currentCssStyle.textDecoration, CssTextDecoration::Underline);
+  effectiveStrikeThrough = currentCssStyle.hasTextDecoration() &&
+                           hasTextDecoration(currentCssStyle.textDecoration, CssTextDecoration::LineThrough);
+  effectiveSup = false;
+  effectiveSub = false;
 
   // Apply inline style stack in order
   for (const auto& entry : inlineStyleStack) {
@@ -95,7 +96,33 @@ void ChapterHtmlSlimParser::updateEffectiveInlineStyle() {
     if (entry.hasStrikeThrough) {
       effectiveStrikeThrough = entry.strikeThrough;
     }
+    if (entry.hasSup) {
+      effectiveSup = entry.sup;
+      if (entry.sup) effectiveSub = false;
+    }
+    if (entry.hasSub) {
+      effectiveSub = entry.sub;
+      if (entry.sub) effectiveSup = false;
+    }
   }
+}
+
+void ChapterHtmlSlimParser::flushPendingAnchor() {
+  if (pendingAnchorId.empty()) return;
+
+  // If the pending anchor is a TOC chapter boundary, force a page break after the previous
+  // block is flushed so the chapter starts on a fresh page.
+  if (std::find(tocAnchors.begin(), tocAnchors.end(), pendingAnchorId) != tocAnchors.end()) {
+    if (currentPage && !currentPage->elements.empty()) {
+      emitPage(lastBodyChildByteOffset);
+      currentPage.reset(new Page());
+      currentPageNextY = 0;
+    }
+  }
+
+  // Record deferred anchor after previous block is flushed (and any TOC page break)
+  anchorData.push_back({std::move(pendingAnchorId), static_cast<uint16_t>(completedPageCount)});
+  pendingAnchorId.clear();
 }
 
 // flush the contents of partWordBuffer to currentTextBlock
@@ -120,6 +147,11 @@ void ChapterHtmlSlimParser::flushPartWordBuffer() {
   if (isStrikeThrough) {
     fontStyle = static_cast<EpdFontFamily::Style>(fontStyle | EpdFontFamily::STRIKETHROUGH);
   }
+  if (effectiveSup) {
+    fontStyle = static_cast<EpdFontFamily::Style>(fontStyle | EpdFontFamily::SUP);
+  } else if (effectiveSub) {
+    fontStyle = static_cast<EpdFontFamily::Style>(fontStyle | EpdFontFamily::SUB);
+  }
 
   // flush the buffer
   partWordBuffer[partWordBufferIndex] = '\0';
@@ -142,20 +174,15 @@ void ChapterHtmlSlimParser::startNewTextBlock(const BlockStyle& blockStyle) {
       const auto style = currentTextBlock->getBlockStyle();
       currentTextBlock->setBlockStyle(style.getCombinedBlockStyle(blockStyle, BlockStyle::CombineAxis::Vertical));
 
-      if (!pendingAnchorId.empty()) {
-        anchorData.push_back({std::move(pendingAnchorId), static_cast<uint16_t>(completedPageCount)});
-        pendingAnchorId.clear();
-      }
+      flushPendingAnchor();
       return;
     }
 
     makePages();
   }
-  // Record deferred anchor after previous block is flushed
-  if (!pendingAnchorId.empty()) {
-    anchorData.push_back({std::move(pendingAnchorId), static_cast<uint16_t>(completedPageCount)});
-    pendingAnchorId.clear();
-  }
+  // If the pending anchor is a TOC chapter boundary, force a page break after the previous
+  // block is flushed so the chapter starts on a fresh page.
+  flushPendingAnchor();
   currentTextBlock.reset(
       new ParsedText(extraParagraphSpacing, forceParagraphIndents, hyphenationEnabled, false, blockStyle));
   wordsExtractedInBlock = 0;
@@ -167,6 +194,67 @@ void ChapterHtmlSlimParser::emitPage(const uint32_t xhtmlByteOffset) {
   }
   completePageFn(std::move(currentPage), {xhtmlByteOffset, xpathParagraphIndex, xpathListItemIndex});
   completedPageCount++;
+}
+
+void ChapterHtmlSlimParser::emitHorizontalRule(const BlockStyle& blockStyle) {
+  if (partWordBufferIndex > 0) {
+    flushPartWordBuffer();
+  }
+
+  if (currentTextBlock) {
+    const BlockStyle parentBlockStyle = currentTextBlock->getBlockStyle();
+    startNewTextBlock(parentBlockStyle);
+  }
+
+  if (!currentPage) {
+    currentPage.reset(new (std::nothrow) Page());
+    if (!currentPage) {
+      LOG_ERR("EHP", "Failed to create page for horizontal rule");
+      return;
+    }
+    currentPageNextY = 0;
+  }
+
+  const int16_t lineHeight = static_cast<int16_t>(renderer.getLineHeight(fontId) * lineCompression + 0.5f);
+  const int16_t defaultVerticalSpacing = static_cast<int16_t>(lineHeight / 2);
+  const int16_t topSpacing =
+      static_cast<int16_t>((blockStyle.marginTop > 0 ? blockStyle.marginTop : defaultVerticalSpacing) +
+                           (blockStyle.paddingTop > 0 ? blockStyle.paddingTop : 0));
+  const int16_t bottomSpacing =
+      static_cast<int16_t>((blockStyle.marginBottom > 0 ? blockStyle.marginBottom : defaultVerticalSpacing) +
+                           (blockStyle.paddingBottom > 0 ? blockStyle.paddingBottom : 0));
+  constexpr uint8_t ruleThickness = 2;
+  const int16_t availableWidth =
+      std::max<int16_t>(1, static_cast<int16_t>(viewportWidth - blockStyle.totalHorizontalInset()));
+  const int16_t width = std::max<int16_t>(1, static_cast<int16_t>(availableWidth / 4));
+  const int16_t xPos = static_cast<int16_t>(blockStyle.leftInset() + ((availableWidth - width) / 2));
+  const int16_t totalHeight = static_cast<int16_t>(topSpacing + ruleThickness + bottomSpacing);
+
+  if (!currentPage->elements.empty() && currentPageNextY + totalHeight > viewportHeight) {
+    emitPage(lastBodyChildByteOffset);
+    currentPage.reset(new (std::nothrow) Page());
+    if (!currentPage) {
+      LOG_ERR("EHP", "Failed to create page after horizontal-rule page break");
+      return;
+    }
+    currentPageNextY = 0;
+  }
+
+  currentPageNextY += topSpacing;
+
+  auto pageRule = std::shared_ptr<PageHorizontalRule>(
+      new (std::nothrow) PageHorizontalRule(width, ruleThickness, xPos, currentPageNextY));
+  if (!pageRule) {
+    LOG_ERR("EHP", "Failed to create PageHorizontalRule");
+    return;
+  }
+  currentPage->elements.push_back(pageRule);
+  currentPageNextY = static_cast<int16_t>(currentPageNextY + ruleThickness + bottomSpacing);
+
+  if (!pendingAnchorId.empty()) {
+    anchorData.push_back({std::move(pendingAnchorId), static_cast<uint16_t>(completedPageCount)});
+    pendingAnchorId.clear();
+  }
 }
 
 void XMLCALL ChapterHtmlSlimParser::startElement(void* userData, const XML_Char* name, const XML_Char** atts) {
@@ -211,7 +299,8 @@ void XMLCALL ChapterHtmlSlimParser::startElement(void* userData, const XML_Char*
       } else if (strcmp(atts[i], "style") == 0) {
         styleAttr = atts[i + 1];
       } else if (strcmp(atts[i], "id") == 0) {
-        // Defer recording until startNewTextBlock, after previous block is flushed to pages
+        // Defer both anchor recording and TOC page breaks until startNewTextBlock,
+        // after the previous block is flushed to pages via makePages().
         self->pendingAnchorId = atts[i + 1];
       }
     }
@@ -298,6 +387,11 @@ void XMLCALL ChapterHtmlSlimParser::startElement(void* userData, const XML_Char*
     self->inlineStyleStack.pop_back();
     self->updateEffectiveInlineStyle();
 
+    self->depth += 1;
+    return;
+  }
+
+  if (self->tableDepth == 1 && strcmp(name, "hr") == 0) {
     self->depth += 1;
     return;
   }
@@ -638,6 +732,25 @@ void XMLCALL ChapterHtmlSlimParser::startElement(void* userData, const XML_Char*
   auto userAlignmentBlockStyle = BlockStyle::fromCssStyle(
       cssStyle, emSize, static_cast<CssTextAlign>(self->paragraphAlignment), self->viewportWidth);
 
+  if (strcmp(name, "hr") == 0) {
+    auto hrBlockStyle = BlockStyle::fromCssStyle(cssStyle, emSize, CssTextAlign::Left, self->viewportWidth);
+    if (!self->embeddedStyle) {
+      hrBlockStyle.marginLeft = 0;
+      hrBlockStyle.marginRight = 0;
+      hrBlockStyle.marginTop = 0;
+      hrBlockStyle.marginBottom = 0;
+      hrBlockStyle.paddingLeft = 0;
+      hrBlockStyle.paddingRight = 0;
+      hrBlockStyle.paddingTop = 0;
+      hrBlockStyle.paddingBottom = 0;
+      hrBlockStyle.textIndentDefined = false;
+      hrBlockStyle.textIndent = 0;
+    }
+    self->emitHorizontalRule(hrBlockStyle);
+    self->depth += 1;
+    return;
+  }
+
   if (self->forceParagraphIndents && strcmp(name, "p") == 0 &&
       (userAlignmentBlockStyle.alignment == CssTextAlign::Justify ||
        userAlignmentBlockStyle.alignment == CssTextAlign::Left) &&
@@ -778,9 +891,26 @@ void XMLCALL ChapterHtmlSlimParser::startElement(void* userData, const XML_Char*
     }
     self->inlineStyleStack.push_back(entry);
     self->updateEffectiveInlineStyle();
+  } else if (strcmp(name, "sup") == 0 || strcmp(name, "sub") == 0) {
+    if (self->partWordBufferIndex > 0) {
+      self->flushPartWordBuffer();
+      self->nextWordContinues = true;
+    }
+    StyleStackEntry entry;
+    entry.depth = self->depth;
+    if (strcmp(name, "sup") == 0) {
+      entry.hasSup = true;
+      entry.sup = true;
+    } else {
+      entry.hasSub = true;
+      entry.sub = true;
+    }
+    self->inlineStyleStack.push_back(entry);
+    self->updateEffectiveInlineStyle();
   } else if (strcmp(name, "span") == 0 || !isHeaderOrBlock(name)) {
     // Handle span and other inline elements for CSS styling
-    if (cssStyle.hasFontWeight() || cssStyle.hasFontStyle() || cssStyle.hasTextDecoration()) {
+    if (cssStyle.hasFontWeight() || cssStyle.hasFontStyle() || cssStyle.hasTextDecoration() ||
+        cssStyle.hasVerticalAlign()) {
       // Flush buffer before style change so preceding text gets current style
       if (self->partWordBufferIndex > 0) {
         self->flushPartWordBuffer();
@@ -801,6 +931,15 @@ void XMLCALL ChapterHtmlSlimParser::startElement(void* userData, const XML_Char*
         entry.underline = hasTextDecoration(cssStyle.textDecoration, CssTextDecoration::Underline);
         entry.hasStrikeThrough = true;
         entry.strikeThrough = hasTextDecoration(cssStyle.textDecoration, CssTextDecoration::LineThrough);
+      }
+      if (cssStyle.hasVerticalAlign()) {
+        if (cssStyle.verticalAlign == CssVerticalAlign::Super) {
+          entry.hasSup = true;
+          entry.sup = true;
+        } else if (cssStyle.verticalAlign == CssVerticalAlign::Sub) {
+          entry.hasSub = true;
+          entry.sub = true;
+        }
       }
       self->inlineStyleStack.push_back(entry);
       self->updateEffectiveInlineStyle();

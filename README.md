@@ -44,13 +44,13 @@ The philosophy of this fork is simple: keep the firmware fast, stable, and focus
 |---|---|
 | Project | `CPR-vCodex` |
 | Device | `Xteink X4`; `Xteink X3` compatibility reported by users, not personally tested |
-| Current release (CPR-vCodex) build | [`1.3.0.12-cpr-vcodex`](https://github.com/franssjz/cpr-vcodex/releases/tag/1.3.0.12-cpr-vcodex) |
+| Current release (CPR-vCodex) build | [`1.3.0.13-cpr-vcodex`](https://github.com/franssjz/cpr-vcodex/releases/tag/1.3.0.13-cpr-vcodex) |
 | Latest SD font package | [`sd-fonts-m1-b4`](https://github.com/franssjz/cpr-vcodex/releases/tag/sd-fonts-m1-b4) |
 | Changelog | [CHANGELOG.md](./CHANGELOG.md) |
-| Latest release notes | - Fixed `Settings > System > SD Card Firmware Update` so `.bin` files on the SD card are visible again.<br>- Kept the normal book browser filter unchanged while applying the firmware-only `.bin` filter to the SD firmware picker.<br>- Restored local SD-card firmware flashing for users who need rollback or recovery workflows without USB flashing. |
+| Latest release notes | - Synced selected CrossPoint Reader upstream fixes through [`3392b3e3`](https://github.com/crosspoint-reader/crosspoint-reader/commit/3392b3e3) while preserving vCodex stats, bookmarks, apps, release, and Auto Flash behavior.<br>- Added EPUB horizontal rules, superscript/subscript rendering, CSS `vertical-align: super/sub`, and TOC subchapter anchor navigation.<br>- Hardened EPUB cache/resource paths, OPF cover validation, CSS discovery, folder-delete cache cleanup, SD file closing, OPDS parsing, and pinned `PNGdec` to `1.1.6`.<br>- Updated SD-card font presets/docs and deferred larger upstream bookmark, RTL, OTA/downloader, settings, and translation-bulk rewrites for a safer later port. |
 | Base firmware line | `CrossPoint Reader 1.3.0` |
-| Latest official commit reviewed | [`f39ba70`](https://github.com/crosspoint-reader/crosspoint-reader/commit/f39ba70) |
-| Latest official commit incorporated | Selected 1.3.0 SDK, display, font-manager, network, cache-cleanup, and file-transfer fixes through [`f39ba70`](https://github.com/crosspoint-reader/crosspoint-reader/commit/f39ba70) |
+| Latest official commit reviewed | [`3392b3e3`](https://github.com/crosspoint-reader/crosspoint-reader/commit/3392b3e3) |
+| Latest official commit incorporated | Selected EPUB/rendering, cache, filesystem, OPDS, font tooling, networking cleanup, and UI fixes from [`7accc607`](https://github.com/crosspoint-reader/crosspoint-reader/commit/7accc607) through [`3392b3e3`](https://github.com/crosspoint-reader/crosspoint-reader/commit/3392b3e3); larger upstream bookmark, RTL, OTA/downloader, translation-bulk, and settings rewrites remain intentionally deferred. |
 | Intentional upstream exclusions | Unsupported upstream theme variants such as `RoundedRaff` remain out of the supported vCodex theme list; other upstream UI/config changes are adapted selectively to preserve the existing X4 workflow. |
 
 ## Web tools

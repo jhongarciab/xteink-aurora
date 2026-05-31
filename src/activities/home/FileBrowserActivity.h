@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -15,7 +16,7 @@ class FileBrowserActivity final : public Activity {
 
  private:
   // Deletion
-  void clearFileMetadata(const std::string& fullPath);
+  bool removeDirFile(const std::string& fullPath);
 
   ButtonNavigator buttonNavigator;
 
@@ -32,6 +33,7 @@ class FileBrowserActivity final : public Activity {
   std::string basepath = "/";
   std::vector<std::string> files;
   std::vector<uint8_t> completedFileStates;
+  std::unique_ptr<char[]> fileNameBuffer;
 
   // Data loading
   void loadFiles();

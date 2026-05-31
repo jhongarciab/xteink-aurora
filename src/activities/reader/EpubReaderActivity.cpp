@@ -13,20 +13,20 @@
 #include <iterator>
 #include <limits>
 
-#include "CrossPointSettings.h"
-#include "CrossPointState.h"
 #include "AchievementsStore.h"
 #include "BookmarksActivity.h"
+#include "CrossPointSettings.h"
+#include "CrossPointState.h"
 #include "EpubReaderChapterSelectionActivity.h"
 #include "EpubReaderFootnotesActivity.h"
 #include "EpubReaderPercentSelectionActivity.h"
 #include "KOReaderCredentialStore.h"
 #include "KOReaderSyncActivity.h"
 #include "MappedInputManager.h"
-#include "ReadingStatsStore.h"
 #include "QrDisplayActivity.h"
 #include "ReaderQuickSettingsActivity.h"
 #include "ReaderUtils.h"
+#include "ReadingStatsStore.h"
 #include "RecentBooksStore.h"
 #include "SdCardFontGlobals.h"
 #include "activities/apps/ReadingStatsDetailActivity.h"
@@ -82,8 +82,8 @@ uint8_t getStatsChapterProgressPercent(const int currentPage, const int pageCoun
     return 0;
   }
 
-  return static_cast<uint8_t>(
-      clampPercent(static_cast<int>((static_cast<float>(currentPage + 1) / static_cast<float>(pageCount)) * 100.0f + 0.5f)));
+  return static_cast<uint8_t>(clampPercent(
+      static_cast<int>((static_cast<float>(currentPage + 1) / static_cast<float>(pageCount)) * 100.0f + 0.5f)));
 }
 
 void markStatsCompletedAtEnd(Epub& epub, int spineIndex) {
@@ -143,9 +143,9 @@ void exitReaderToHomeOrStats(GfxRenderer& renderer, MappedInputManager& mappedIn
   READING_STATS.endSession();
   ACHIEVEMENTS.recordSessionEnded(READING_STATS.getLastSessionSnapshot());
   showPendingAchievementPopups(renderer);
-  const bool countedSession =
-      READING_STATS.getLastSessionSnapshot().valid && READING_STATS.getLastSessionSnapshot().counted &&
-      READING_STATS.getLastSessionSnapshot().path == bookPath;
+  const bool countedSession = READING_STATS.getLastSessionSnapshot().valid &&
+                              READING_STATS.getLastSessionSnapshot().counted &&
+                              READING_STATS.getLastSessionSnapshot().path == bookPath;
 
   if (SETTINGS.showStatsAfterReading && countedSession && !bookPath.empty()) {
     activityManager.replaceActivity(
@@ -219,8 +219,9 @@ void EpubReaderActivity::onEnter() {
   bool loadedFromLegacy = false;
   const std::string stableProgressPath = getStableProgressPath(stableBookId);
   const std::string legacyProgressPath = getLegacyProgressPath(*epub);
-  const std::string progressPath =
-      (!stableProgressPath.empty() && Storage.exists(stableProgressPath.c_str())) ? stableProgressPath : legacyProgressPath;
+  const std::string progressPath = (!stableProgressPath.empty() && Storage.exists(stableProgressPath.c_str()))
+                                       ? stableProgressPath
+                                       : legacyProgressPath;
   if (progressPath == legacyProgressPath) {
     loadedFromLegacy = !stableProgressPath.empty() && Storage.exists(legacyProgressPath.c_str());
   }
@@ -338,8 +339,7 @@ void EpubReaderActivity::loop() {
     }
   }
 
-  if (mappedInput.wasReleased(MappedInputManager::Button::Confirm) &&
-      mappedInput.getHeldTime() >= bookmarkToggleMs) {
+  if (mappedInput.wasReleased(MappedInputManager::Button::Confirm) && mappedInput.getHeldTime() >= bookmarkToggleMs) {
     waitingForConfirmSecondClick = false;
     firstConfirmClickMs = 0UL;
     if (section && section->currentPage >= 0 && section->currentPage < section->pageCount) {
@@ -475,10 +475,9 @@ void EpubReaderActivity::loop() {
   }
 
   if (longPress && SETTINGS.longPressButtonBehavior == CrossPointSettings::LONG_PRESS_ORIENTATION_CHANGE) {
-    const uint8_t newOrientation =
-        nextTriggered ? (SETTINGS.orientation - 1 + CrossPointSettings::ORIENTATION_COUNT) %
-                            CrossPointSettings::ORIENTATION_COUNT
-                      : (SETTINGS.orientation + 1) % CrossPointSettings::ORIENTATION_COUNT;
+    const uint8_t newOrientation = nextTriggered ? (SETTINGS.orientation - 1 + CrossPointSettings::ORIENTATION_COUNT) %
+                                                       CrossPointSettings::ORIENTATION_COUNT
+                                                 : (SETTINGS.orientation + 1) % CrossPointSettings::ORIENTATION_COUNT;
     applyOrientation(newOrientation);
     requestUpdate();
     return;
@@ -667,9 +666,16 @@ void EpubReaderActivity::onReaderMenuConfirm(EpubReaderMenuActivity::MenuAction 
           std::make_unique<EpubReaderChapterSelectionActivity>(renderer, mappedInput, epub, path, spineIdx),
           [this](const ActivityResult& result) {
             READING_STATS.resumeSession();
-            if (!result.isCancelled && currentSpineIndex != std::get<ChapterResult>(result.data).spineIndex) {
+            if (!result.isCancelled) {
+              const auto& chapterResult = std::get<ChapterResult>(result.data);
               RenderLock lock(*this);
-              currentSpineIndex = std::get<ChapterResult>(result.data).spineIndex;
+
+              currentSpineIndex = chapterResult.spineIndex;
+
+              // If anchor is not empty, it will be used later to calculate the page number.
+              pendingAnchor = chapterResult.anchor;
+
+              // Otherwise page 0 will be used.
               nextPageNumber = 0;
               sessionProgressTouched = true;
               section.reset();
@@ -692,30 +698,29 @@ void EpubReaderActivity::onReaderMenuConfirm(EpubReaderMenuActivity::MenuAction 
     }
     case EpubReaderMenuActivity::MenuAction::BOOKMARKS: {
       READING_STATS.noteActivity();
-      startActivityForResult(
-          std::make_unique<BookmarksActivity>(
-              renderer, mappedInput, bookmarkStore.getAll(), epub, "",
-              [this](const BookmarkStore::Bookmark& bookmark) {
-                const bool removed = bookmarkStore.remove(bookmark.spineIndex, bookmark.pageNumber);
-                if (removed) {
-                  bookmarkStore.save();
-                }
-                return removed;
-              }),
-          [this](const ActivityResult& result) {
-            READING_STATS.resumeSession();
-            if (!result.isCancelled) {
-              const auto& bookmark = std::get<BookmarkResult>(result.data);
-              if (currentSpineIndex != bookmark.spineIndex || !section ||
-                  section->currentPage != static_cast<int>(bookmark.page)) {
-                RenderLock lock(*this);
-                currentSpineIndex = bookmark.spineIndex;
-                nextPageNumber = static_cast<int>(bookmark.page);
-                sessionProgressTouched = true;
-                section.reset();
-              }
-            }
-          });
+      startActivityForResult(std::make_unique<BookmarksActivity>(
+                                 renderer, mappedInput, bookmarkStore.getAll(), epub, "",
+                                 [this](const BookmarkStore::Bookmark& bookmark) {
+                                   const bool removed = bookmarkStore.remove(bookmark.spineIndex, bookmark.pageNumber);
+                                   if (removed) {
+                                     bookmarkStore.save();
+                                   }
+                                   return removed;
+                                 }),
+                             [this](const ActivityResult& result) {
+                               READING_STATS.resumeSession();
+                               if (!result.isCancelled) {
+                                 const auto& bookmark = std::get<BookmarkResult>(result.data);
+                                 if (currentSpineIndex != bookmark.spineIndex || !section ||
+                                     section->currentPage != static_cast<int>(bookmark.page)) {
+                                   RenderLock lock(*this);
+                                   currentSpineIndex = bookmark.spineIndex;
+                                   nextPageNumber = static_cast<int>(bookmark.page);
+                                   sessionProgressTouched = true;
+                                   section.reset();
+                                 }
+                               }
+                             });
       break;
     }
     case EpubReaderMenuActivity::MenuAction::GO_TO_PERCENT: {
@@ -1038,11 +1043,10 @@ void EpubReaderActivity::render(RenderLock&& lock) {
 
       const auto popupFn = [this]() { GUI.drawPopup(renderer, tr(STR_INDEXING)); };
 
-      if (!section->createSectionFile(SETTINGS.getReaderFontId(), SETTINGS.getReaderLineCompression(),
-                                      SETTINGS.extraParagraphSpacing, SETTINGS.forceParagraphIndents,
-                                      SETTINGS.paragraphAlignment, viewportWidth, viewportHeight,
-                                      SETTINGS.hyphenationEnabled, SETTINGS.embeddedStyle, SETTINGS.imageRendering,
-                                      popupFn)) {
+      if (!section->createSectionFile(
+              SETTINGS.getReaderFontId(), SETTINGS.getReaderLineCompression(), SETTINGS.extraParagraphSpacing,
+              SETTINGS.forceParagraphIndents, SETTINGS.paragraphAlignment, viewportWidth, viewportHeight,
+              SETTINGS.hyphenationEnabled, SETTINGS.embeddedStyle, SETTINGS.imageRendering, popupFn)) {
         LOG_ERR("ERS", "Failed to persist page data to SD");
         section.reset();
         return;
@@ -1197,8 +1201,7 @@ void EpubReaderActivity::silentIndexNextChapterIfNeeded(const uint16_t viewportW
   if (!nextSection.createSectionFile(SETTINGS.getReaderFontId(), SETTINGS.getReaderLineCompression(),
                                      SETTINGS.extraParagraphSpacing, SETTINGS.forceParagraphIndents,
                                      SETTINGS.paragraphAlignment, viewportWidth, viewportHeight,
-                                     SETTINGS.hyphenationEnabled, SETTINGS.embeddedStyle,
-                                     SETTINGS.imageRendering)) {
+                                     SETTINGS.hyphenationEnabled, SETTINGS.embeddedStyle, SETTINGS.imageRendering)) {
     LOG_ERR("ERS", "Failed silent indexing for chapter: %d", nextSpineIndex);
   }
 }
@@ -1211,7 +1214,8 @@ void EpubReaderActivity::saveProgress(int spineIndex, int currentPage, int pageC
         clampPercent(static_cast<int>(epub->calculateProgress(spineIndex, chapterProgress) * 100.0f + 0.5f));
   }
   READING_STATS.updateProgress(static_cast<uint8_t>(progressPercent), progressPercent >= 100,
-                               getStatsChapterTitle(*epub, spineIndex), getStatsChapterProgressPercent(currentPage, pageCount));
+                               getStatsChapterTitle(*epub, spineIndex),
+                               getStatsChapterProgressPercent(currentPage, pageCount));
 
   std::string progressPath = getStableProgressPath(stableBookId);
   if (!progressPath.empty()) {
@@ -1340,8 +1344,7 @@ void EpubReaderActivity::renderContents(std::unique_ptr<Page> page, const int or
             tGrayMsb - tGrayLsb, tGrayDisplay - tGrayMsb, tBwRestore - tGrayDisplay, tEnd - t0);
   } else {
     const auto tEnd = millis();
-    LOG_DBG("ERS",
-            "Page render: prewarm=%lums bw_render=%lums display=%lums bw_store=%lums grayscale=%s total=%lums",
+    LOG_DBG("ERS", "Page render: prewarm=%lums bw_render=%lums display=%lums bw_store=%lums grayscale=%s total=%lums",
             tPrewarm - t0, tBwRender - tPrewarm, tDisplay - tBwRender, tBwStore - tDisplay,
             needsGrayscale ? "skipped" : "off", tEnd - t0);
   }

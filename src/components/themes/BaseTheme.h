@@ -70,7 +70,22 @@ struct ThemeMetrics {
   int keyboardWidthPercent;
 };
 
-enum UIIcon { Folder, Text, Image, Book, File, Recent, Settings, Apps, Transfer, Library, Trophy, Wifi, Hotspot, Heart };
+enum UIIcon {
+  Folder,
+  Text,
+  Image,
+  Book,
+  File,
+  Recent,
+  Settings,
+  Apps,
+  Transfer,
+  Library,
+  Trophy,
+  Wifi,
+  Hotspot,
+  Heart
+};
 enum class KeyboardKeyType { Normal, Shift, Mode, Space, Del, Ok, Disabled };
 
 // Default theme implementation (Classic Theme)
@@ -131,8 +146,7 @@ class BaseTheme {
                         const std::function<std::string(int index)>& rowTitle,
                         const std::function<std::string(int index)>& rowSubtitle = nullptr,
                         const std::function<UIIcon(int index)>& rowIcon = nullptr,
-                        const std::function<std::string(int index)>& rowValue = nullptr,
-                        bool highlightValue = false,
+                        const std::function<std::string(int index)>& rowValue = nullptr, bool highlightValue = false,
                         const std::function<bool(int index)>& rowCompleted = nullptr) const;
   virtual void drawHeader(const GfxRenderer& renderer, Rect rect, const char* title,
                           const char* subtitle = nullptr) const;
@@ -153,7 +167,7 @@ class BaseTheme {
   virtual void fillPopupProgress(const GfxRenderer& renderer, const Rect& layout, const int progress) const;
   virtual void drawStatusBar(GfxRenderer& renderer, const float bookProgress, const int currentPage,
                              const int pageCount, std::string title, const int paddingBottom = 0,
-                             const int textYOffset = 0) const;
+                             const int textYOffset = 0, const bool fillMargin = true) const;
   virtual void drawHelpText(const GfxRenderer& renderer, Rect rect, const char* label) const;
   virtual void drawTextField(const GfxRenderer& renderer, Rect rect, const int textWidth, bool cursorMode = false,
                              int contentStartX = 0, int contentWidth = 0) const;

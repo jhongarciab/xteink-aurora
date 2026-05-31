@@ -25,6 +25,7 @@ struct MenuResult {
 
 struct ChapterResult {
   int spineIndex = 0;
+  std::string anchor;
 };
 
 struct PercentResult {
@@ -82,9 +83,9 @@ struct FlashcardSessionResult {
   int sessionCount = 0;
 };
 
-using ResultVariant = std::variant<std::monostate, WifiResult, KeyboardResult, MenuResult, ChapterResult, PercentResult,
-                                   PageResult, BookmarkResult, SyncResult, NetworkModeResult, FootnoteResult,
-                                   FilePathResult, FlashcardSessionResult>;
+using ResultVariant =
+    std::variant<std::monostate, WifiResult, KeyboardResult, MenuResult, ChapterResult, PercentResult, PageResult,
+                 BookmarkResult, SyncResult, NetworkModeResult, FootnoteResult, FilePathResult, FlashcardSessionResult>;
 
 struct ActivityResult {
   bool isCancelled = false;

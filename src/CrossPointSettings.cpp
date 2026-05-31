@@ -41,9 +41,8 @@ uint8_t migrateLegacyUiTheme(const uint8_t legacyUiTheme) {
 }
 
 uint8_t migrateLegacyFontSize(const uint8_t legacyFontSize) {
-  return legacyFontSize < LEGACY_FONT_SIZE_COUNT
-             ? static_cast<uint8_t>(legacyFontSize + 1)
-             : static_cast<uint8_t>(CrossPointSettings::MEDIUM);
+  return legacyFontSize < LEGACY_FONT_SIZE_COUNT ? static_cast<uint8_t>(legacyFontSize + 1)
+                                                 : static_cast<uint8_t>(CrossPointSettings::MEDIUM);
 }
 
 // Convert legacy front button layout into explicit logical->hardware mapping.
@@ -306,12 +305,13 @@ unsigned long CrossPointSettings::getSleepTimeoutMs() const {
     case SLEEP_5_MIN:
       return 5UL * 60 * 1000;
     case SLEEP_10_MIN:
-    default:
       return 10UL * 60 * 1000;
     case SLEEP_15_MIN:
       return 15UL * 60 * 1000;
     case SLEEP_30_MIN:
       return 30UL * 60 * 1000;
+    default:
+      return 10UL * 60 * 1000;
   }
 }
 

@@ -414,8 +414,6 @@ void BaseTheme::drawHeader(const GfxRenderer& renderer, Rect rect, const char* t
 }
 
 void BaseTheme::drawSubHeader(const GfxRenderer& renderer, Rect rect, const char* label, const char* rightLabel) const {
-  constexpr int underlineHeight = 2;  // Height of selection underline
-  constexpr int underlineGap = 4;     // Gap between text and underline
   constexpr int maxListValueWidth = 200;
 
   int currentX = rect.x + BaseMetrics::values.contentSidePadding;
@@ -732,10 +730,9 @@ void BaseTheme::drawButtonMenu(GfxRenderer& renderer, Rect rect, int buttonCount
                                const std::function<bool(int index)>& showAccessory) const {
   const int availableHeight = std::max(0, rect.height);
   const int gap = BaseMetrics::values.menuSpacing;
-  const int rowHeight =
-      buttonCount > 0
-          ? std::min(BaseMetrics::values.menuRowHeight, (availableHeight - gap * std::max(0, buttonCount - 1)) / buttonCount)
-          : BaseMetrics::values.menuRowHeight;
+  const int rowHeight = buttonCount > 0 ? std::min(BaseMetrics::values.menuRowHeight,
+                                                   (availableHeight - gap * std::max(0, buttonCount - 1)) / buttonCount)
+                                        : BaseMetrics::values.menuRowHeight;
 
   for (int i = 0; i < buttonCount; ++i) {
     const int tileY = rect.y + static_cast<int>(i) * (rowHeight + gap);
@@ -820,8 +817,8 @@ void BaseTheme::fillPopupProgress(const GfxRenderer& renderer, const Rect& layou
 }
 
 void BaseTheme::drawStatusBar(GfxRenderer& renderer, const float bookProgress, const int currentPage,
-                              const int pageCount, std::string title, const int paddingBottom,
-                              const int textYOffset) const {
+                              const int pageCount, std::string title, const int paddingBottom, const int textYOffset,
+                              const bool fillMargin) const {
   auto metrics = UITheme::getInstance().getMetrics();
   int orientedMarginTop, orientedMarginRight, orientedMarginBottom, orientedMarginLeft;
   renderer.getOrientedViewableTRBL(&orientedMarginTop, &orientedMarginRight, &orientedMarginBottom,
@@ -853,7 +850,9 @@ void BaseTheme::drawStatusBar(GfxRenderer& renderer, const float bookProgress, c
 
   // Draw Progress Bar
   if (SETTINGS.statusBarProgressBar != CrossPointSettings::STATUS_BAR_PROGRESS_BAR::HIDE_PROGRESS) {
-    const int progressBarMaxWidth = renderer.getScreenWidth() - orientedMarginLeft - orientedMarginRight;
+    const int barMarginLeft = fillMargin ? 0 : orientedMarginLeft;
+    const int barMarginRight = fillMargin ? 0 : orientedMarginRight;
+    const int progressBarMaxWidth = renderer.getScreenWidth() - barMarginLeft - barMarginRight;
     const int progressBarY = renderer.getScreenHeight() - orientedMarginBottom -
                              ((SETTINGS.statusBarProgressBarThickness + 1) * 2) - paddingBottom;
     size_t progress;
@@ -864,8 +863,9 @@ void BaseTheme::drawStatusBar(GfxRenderer& renderer, const float bookProgress, c
       progress = (pageCount > 0) ? (static_cast<float>(currentPage) / pageCount) * 100 : 0;
     }
     const int barWidth = progressBarMaxWidth * progress / 100;
-    renderer.fillRect(orientedMarginLeft, progressBarY, barWidth, ((SETTINGS.statusBarProgressBarThickness + 1) * 2),
-                      true);
+    const int barHeight =
+        ((SETTINGS.statusBarProgressBarThickness + 1) * 2) + (fillMargin ? orientedMarginBottom - 1 : 0);
+    renderer.fillRect(barMarginLeft, progressBarY, barWidth, barHeight, true);
   }
 
   // Draw Battery
