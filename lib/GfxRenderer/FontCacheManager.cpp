@@ -74,6 +74,12 @@ void FontCacheManager::recordText(const char* text, int fontId, EpdFontFamily::S
   scanStyleCounts_[baseStyle] += cpCount;
 }
 
+void FontCacheManager::recordStyle(int fontId, EpdFontFamily::Style style) {
+  if (scanFontId_ < 0) scanFontId_ = fontId;
+  const uint8_t baseStyle = static_cast<uint8_t>(style) & 0x03;
+  scanStyleCounts_[baseStyle] += 1;
+}
+
 // --- PrewarmScope implementation ---
 
 FontCacheManager::PrewarmScope::PrewarmScope(FontCacheManager& manager) : manager_(&manager) {

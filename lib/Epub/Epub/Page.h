@@ -90,7 +90,7 @@ class Page {
   }
 
   void render(GfxRenderer& renderer, int fontId, int xOffset, int yOffset, uint8_t bionicReadingMode = 0) const;
-  void recordFontUsage(FontCacheManager& fontCacheManager, int fontId) const;
+  void recordFontUsage(FontCacheManager& fontCacheManager, int fontId, uint8_t bionicReadingMode = 0) const;
   void renderImages(GfxRenderer& renderer, int xOffset, int yOffset) const;
   bool serialize(FsFile& file) const;
   static std::unique_ptr<Page> deserialize(FsFile& file);

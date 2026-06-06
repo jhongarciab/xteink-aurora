@@ -46,7 +46,7 @@ class TextBlock final : public Block {
   const std::vector<std::string>& getWords() const { return words; }
   bool isEmpty() override { return words.empty(); }
   size_t wordCount() const { return words.size(); }
-  void recordFontUsage(FontCacheManager& fontCacheManager, int fontId) const;
+  void recordFontUsage(FontCacheManager& fontCacheManager, int fontId, uint8_t bionicReadingMode = 0) const;
   // given a renderer works out where to break the words into lines
   void render(const GfxRenderer& renderer, int fontId, int x, int y, uint8_t bionicReadingMode = 0) const;
   BlockType getType() override { return TEXT_BLOCK; }

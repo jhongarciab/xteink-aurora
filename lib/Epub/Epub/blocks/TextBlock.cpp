@@ -64,7 +64,8 @@ void drawDecorationLine(const GfxRenderer& renderer, const int startX, const int
 }
 }  // namespace
 
-void TextBlock::recordFontUsage(FontCacheManager& fontCacheManager, const int fontId) const {
+void TextBlock::recordFontUsage(FontCacheManager& fontCacheManager, const int fontId,
+                                const uint8_t bionicReadingMode) const {
   if (words.size() != wordStyles.size()) {
     LOG_ERR("TXB", "Font usage scan skipped: size mismatch (words=%u, styles=%u)\n", (uint32_t)words.size(),
             (uint32_t)wordStyles.size());
@@ -72,7 +73,11 @@ void TextBlock::recordFontUsage(FontCacheManager& fontCacheManager, const int fo
   }
 
   for (size_t i = 0; i < words.size(); i++) {
-    fontCacheManager.recordText(words[i].c_str(), fontId, wordStyles[i]);
+    const EpdFontFamily::Style style = wordStyles[i];
+    fontCacheManager.recordText(words[i].c_str(), fontId, style);
+    if (bionicReadingMode == BIONIC_READING_NORMAL && (style & EpdFontFamily::BOLD) == 0) {
+      fontCacheManager.recordStyle(fontId, static_cast<EpdFontFamily::Style>(style | EpdFontFamily::BOLD));
+    }
   }
 }
 
@@ -155,14 +160,10 @@ void TextBlock::render(const GfxRenderer& renderer, const int fontId, const int 
             renderer.drawText(fontId, cursorX + 1, wordY, buf, true, currentStyle);
             cursorX += renderer.getTextAdvanceX(fontId, buf, currentStyle);
           } else {
-            // Use synthetic bold (double strike) instead of switching to a true BOLD face.
-            // Some EPUB fonts miss or mismatch bold glyph metrics, which can corrupt layout.
-            renderer.drawText(fontId, cursorX, wordY, buf, true, currentStyle);
-            if (renderer.getRenderMode() == GfxRenderer::BW) {
-              renderer.drawText(fontId, cursorX + 1, wordY, buf, true, currentStyle);
-              renderer.drawText(fontId, cursorX + 2, wordY, buf, true, currentStyle);
-            }
-            cursorX += renderer.getTextAdvanceX(fontId, buf, currentStyle);
+            const EpdFontFamily::Style boldStyle =
+                static_cast<EpdFontFamily::Style>(currentStyle | EpdFontFamily::BOLD);
+            renderer.drawText(fontId, cursorX, wordY, buf, true, boldStyle);
+            cursorX += renderer.getTextAdvanceX(fontId, buf, boldStyle);
           }
         }
 

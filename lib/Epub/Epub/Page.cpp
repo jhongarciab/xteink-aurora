@@ -103,11 +103,12 @@ void Page::render(GfxRenderer& renderer, const int fontId, const int xOffset, co
   }
 }
 
-void Page::recordFontUsage(FontCacheManager& fontCacheManager, const int fontId) const {
+void Page::recordFontUsage(FontCacheManager& fontCacheManager, const int fontId,
+                           const uint8_t bionicReadingMode) const {
   for (const auto& element : elements) {
     if (element->getTag() == TAG_PageLine) {
       const auto& line = static_cast<const PageLine&>(*element);
-      line.getBlock()->recordFontUsage(fontCacheManager, fontId);
+      line.getBlock()->recordFontUsage(fontCacheManager, fontId, bionicReadingMode);
     }
   }
 }

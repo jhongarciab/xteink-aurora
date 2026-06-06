@@ -48,6 +48,7 @@ The philosophy of this fork is simple: keep the firmware fast, stable, and focus
 | Latest SD font package | [`sd-fonts-m1-b4`](https://github.com/franssjz/cpr-vcodex/releases/tag/sd-fonts-m1-b4) |
 | Changelog | [CHANGELOG.md](./CHANGELOG.md) |
 | Current development sync | Selected CrossPoint Reader fixes after [`3392b3e3`](https://github.com/crosspoint-reader/crosspoint-reader/commit/3392b3e3) through [`fd5b8078`](https://github.com/crosspoint-reader/crosspoint-reader/commit/fd5b8078), including EPUB image/cache/CSS/parser performance, KOReader chapter-start mapping, font-upload hardening, long-press chapter-start navigation, progress-bar placement, and `open-x4-sdk` [`26648d6`](https://github.com/crosspoint-reader/community-sdk/commit/26648d643a1c883ab2f71e1869d05fe2a0c9d498). Hebrew/RTL, translation-only churn, OpenDyslexic storage migration, docs-only guide updates, and t5s3 README-only changes remain deferred. |
+| Current development fixes | Fixed EPUB Bionic Reading Normal text-weight regressions reported in [#63](https://github.com/franssjz/cpr-vcodex/issues/63) and [#64](https://github.com/franssjz/cpr-vcodex/issues/64), restoring real bold-face prefixes consistently in BW and anti-aliased rendering while keeping font prewarm aligned. |
 | Latest release notes | - Synced selected CrossPoint Reader upstream fixes through [`3392b3e3`](https://github.com/crosspoint-reader/crosspoint-reader/commit/3392b3e3) while preserving vCodex stats, bookmarks, apps, release, and Auto Flash behavior.<br>- Added EPUB horizontal rules, superscript/subscript rendering, CSS `vertical-align: super/sub`, and TOC subchapter anchor navigation.<br>- Hardened EPUB cache/resource paths, OPF cover validation, CSS discovery, folder-delete cache cleanup, SD file closing, OPDS parsing, and pinned `PNGdec` to `1.1.6`.<br>- Updated SD-card font presets/docs and deferred larger upstream bookmark, RTL, OTA/downloader, settings, and translation-bulk rewrites for a safer later port. |
 | Base firmware line | `CrossPoint Reader 1.3.0` |
 | Latest official commit reviewed | [`fd5b8078`](https://github.com/crosspoint-reader/crosspoint-reader/commit/fd5b8078) |
@@ -145,7 +146,7 @@ This project is **not affiliated with Xteink**.
 - configurable OPDS download filename format: `Author - Title` or `Title - Author`
 - configurable `Home` and `Apps` shortcuts
 - `Flashcards` with offline CSV decks, session summary, recents, stats and settings
-- `Text Darkness`, `Reader Refresh Mode`, `Lexend`, `X Small`
+- `Text Darkness`, `Bionic Reading`, `Reader Refresh Mode`, `Lexend`, `X Small`
 - `Sleep` tools with directory selection, preview, cache, sequential and shuffle behavior
 - `Dark Mode (Experimental)`
 - Vietnamese UI support and synchronized translation coverage across all shipped languages
@@ -226,6 +227,7 @@ That is enough to start using the core `vcodex` additions: coherent day-based an
 | `Bookmarks` | EPUB bookmarks plus a global bookmarks app | [Bookmarks](#bookmarks) |
 | `Sleep tools` | folder selection, preview, cache, sequential and shuffle behavior | [Sleep](#sleep) |
 | `Text Darkness` | global `Normal / Dark / Extra Dark` text rendering control, based on the idea first seen in `crosspet` | [Settings](#settings) |
+| `Bionic Reading` | `Off / Normal / Subtle` EPUB focus-reading modes with stable text weight in BW and anti-aliased rendering | [Settings](#settings) |
 | `Reader Refresh Mode` | `Auto / Fast / Half / Full` | [Settings](#settings) |
 | `Lexend` | additional reader font family | [Settings](#settings) |
 | `Dark Mode (Experimental)` | optional white-on-black UI and reader presentation | [Settings](#settings) |
@@ -443,7 +445,7 @@ Useful reader/display additions include:
 
 | Area | Options |
 |---|---|
-| Reader | `Text Anti-Aliasing`, `Text Darkness`, `Reader Refresh Mode`, `Reader Font Family`, `Reader Font Size`, `Manage Fonts` |
+| Reader | `Text Anti-Aliasing`, `Text Darkness`, `Bionic Reading`, `Reader Refresh Mode`, `Reader Font Family`, `Reader Font Size`, `Manage Fonts` |
 | Display | `UI Theme`, sleep-screen controls, `Dark Mode (Experimental)`, `Sunlight Fading Fix` |
 | Controls | `Side Button Layout`, `Long-press button behavior`, `Short Power Button Click`, `Tilt Page Turn` |
 | Status bar | EPUB/status-bar fields, battery visibility, `XTC Status Bar` |

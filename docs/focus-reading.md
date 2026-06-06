@@ -1,6 +1,6 @@
-# Focus Reading
+# Focus Reading / Bionic Reading
 
-Focus Reading is a reading aid that bolds the first portion of each word, guiding your eyes to natural fixation points and helping you read faster with less effort. Some readers — particularly those with ADHD — find it helps them stay engaged with the text and reduces mind-wandering. It is inspired by the Bionic Reading technique.
+Focus Reading is a reading aid that emphasizes the first portion of each word, guiding your eyes to natural fixation points and helping you read faster with less effort. Some readers — particularly those with ADHD — find it helps them stay engaged with the text and reduces mind-wandering. It is inspired by the Bionic Reading technique.
 
 <img src="./images/focus-reading/focus-reading.jpg" height="500" alt="Comparison of the same page with and without Focus Reading enabled" />
 
@@ -9,9 +9,9 @@ Focus Reading is a reading aid that bolds the first portion of each word, guidin
 ## Enabling Focus Reading
 
 1. Open **Settings > Reader**
-2. Toggle **Focus Reading** on
+2. Set **Bionic Reading** to **Normal** or **Subtle**
 
-Toggling the setting will trigger a re-index of your current book, the same as when changing font settings. Once indexing is complete, page turns proceed as normal. No changes are made to your EPUB files.
+Changing the setting will trigger a re-index of your current book, the same as when changing font settings. Once indexing is complete, page turns proceed as normal. No changes are made to your EPUB files.
 
 ## Examples
 
@@ -30,4 +30,5 @@ Toggling the setting will trigger a re-index of your current book, the same as w
 ## Notes
 
 - Focus Reading only applies to regular body text. Already-bold text (headings, emphasis) is left unchanged.
+- **Normal** uses a stronger bold prefix; **Subtle** uses a lighter emphasis.
 - The setting is per-device, not per-book — it applies to all books while enabled.

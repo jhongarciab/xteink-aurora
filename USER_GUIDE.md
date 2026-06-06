@@ -175,6 +175,7 @@ The Settings screen allows you to configure the device's behavior. There are a f
   - "ON" - Vertical space will be added between paragraphs in Reading Mode
   - "OFF" - Paragraphs will not have vertical space added, but will have first-line indentation
 - **Text Anti-Aliasing**: Whether to show smooth grey edges (anti-aliasing) on text in reading mode. Note this slows down page turns slightly.
+- **Bionic Reading**: Emphasizes the first portion of EPUB words to guide fixation points. `Normal` uses a stronger bold prefix, while `Subtle` uses a lighter emphasis.
 
 #### 3.6.3 Controls
 
