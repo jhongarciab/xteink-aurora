@@ -112,17 +112,10 @@ Use on the Xteink:
 Dictionary download sources vary in quality, completeness, format, and license. Always extract the downloaded package until you have the `.ifo`, `.idx`, and `.dict` files, and check the license before redistributing a dictionary.
 
 Monolingual (Defining) dictionary:
-- [Recommended Mix [ES, EN] - MEGA](https://mega.nz/folder/RDFSRTSA#QCwev-ICsGG_XsTKV0glrQ/folder/BSdzWDxA)
-- [Recommended Mix [ES, EN] - MEDIAFIRE](https://app.mediafire.com/folder/7ox8nert1gl68)
-- [English](https://drive.google.com/file/d/1b2Z...ew?usp=sharing) Shorter Oxford English Dictionary
-- [reader.dict](https://www.reader-dict.com/) offers free monolingual StarDict downloads under the "monolingual version for free" section. The dictionary from this source is currently weak.
-- [reader.dict English](https://www.reader-dict.com/download/en) provides English StarDict downloads.
-- [Spanish dictionary pack](https://drive.proton.me/urls/DRR38240S0#KJRRl44xb709) contains several Spanish dictionaries. Create one separate `dictionaries/<dictionary-name>/` directory for each dictionary if you want to test them independently.
+- ...
 
 Bilingual (Translation) dictionary:
-- [Recommended Mix [ES, EN] - MEGA](https://mega.nz/folder/RDFSRTSA#QCwev-ICsGG_XsTKV0glrQ/folder/4WNV3RiR)
-- [Recommended Mix [ES, EN] - MEDIAFIRE](https://www.mediafire.com/folder/xistn8eurgvih/xteink#jdlxf65m3l4c3)
-- [WikDict StarDict downloads](https://download.wikdict.com/dictionaries/stardict/) provides direct StarDict ZIP downloads for many language pairs.
+- ...
 
 If you know reliable public dictionary links for more languages, please contact the project or open an issue/discussion so this list can be updated.
 
