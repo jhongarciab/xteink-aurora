@@ -287,8 +287,8 @@ void OpdsBookBrowserActivity::downloadBook(const OpdsEntry& book) {
   std::string downloadUrl = UrlUtils::buildUrl(feedUrl, book.href);
   std::string opdsFolderName = server.name.empty() ? "default" : StringUtils::sanitizeFilename(server.name);
   std::string opdsDir = "/opds/" + opdsFolderName;
-  if (!Storage.mkdir(opdsDir.c_str())) {
-    LOG_DBG("OPDS", "Failed to create directory %s, saving to root", opdsDir.c_str());
+  if (!Storage.ensureDirectoryExists(opdsDir.c_str())) {
+    LOG_DBG("OPDS", "Failed to prepare directory %s, saving to root", opdsDir.c_str());
     opdsDir = "";
   }
   std::string filename = opdsDir + "/" + StringUtils::sanitizeFilename(buildOpdsDownloadBaseName(book)) + ".epub";
