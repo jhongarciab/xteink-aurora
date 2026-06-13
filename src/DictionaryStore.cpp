@@ -1324,6 +1324,10 @@ int dictionaryBuiltInFontId(const uint8_t family, const uint8_t size) {
 }
 
 int DictionaryStore::getDefinitionFontId(const int readerFontId) const {
+  if (!configLoaded) {
+    const_cast<DictionaryStore*>(this)->loadConfig();
+  }
+
   if (definitionTextSize == DEF_TEXT_MEDIUM) {
     return readerFontId;
   }

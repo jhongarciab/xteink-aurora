@@ -15,6 +15,7 @@
 #include <climits>
 #include <cstdlib>
 #include <cstring>
+#include <initializer_list>
 #include <iterator>
 #include <limits>
 #include <utility>
@@ -616,6 +617,12 @@ bool EpubReaderActivity::handleDictionaryModeInput() {
   auto touched = [this](MappedInputManager::Button button) {
     return mappedInput.wasPressed(button) || mappedInput.wasReleased(button) || mappedInput.isPressed(button);
   };
+  auto releasedAny = [this](std::initializer_list<MappedInputManager::Button> buttons) {
+    for (const auto button : buttons) {
+      if (mappedInput.wasReleased(button)) return true;
+    }
+    return false;
+  };
 
   if (mappedInput.wasReleased(MappedInputManager::Button::Back)) {
     if (dictPopupVisible) {
@@ -638,25 +645,17 @@ bool EpubReaderActivity::handleDictionaryModeInput() {
   }
 
   if (dictPopupVisible) {
-    bool changed = false;
-    dictLineNavigator.onPressAndContinuous(
-        {MappedInputManager::Button::PageBack, MappedInputManager::Button::Up, MappedInputManager::Button::Left},
-        [this, &changed] {
-          if (dictDefinitionPage > 0) {
-            --dictDefinitionPage;
-            changed = true;
-          }
-        });
-    dictLineNavigator.onPressAndContinuous(
-        {MappedInputManager::Button::PageForward, MappedInputManager::Button::Down, MappedInputManager::Button::Right},
-        [this, &changed] {
-          if (dictDefinitionPage + 1 < dictTotalPages) {
-            ++dictDefinitionPage;
-            changed = true;
-          }
-        });
-
-    if (changed) {
+    const bool prevPage =
+        releasedAny({MappedInputManager::Button::PageBack, MappedInputManager::Button::Up, MappedInputManager::Button::Left});
+    const bool nextPage = releasedAny(
+        {MappedInputManager::Button::PageForward, MappedInputManager::Button::Down, MappedInputManager::Button::Right});
+    if (prevPage && dictDefinitionPage > 0) {
+      --dictDefinitionPage;
+      updateDictionaryOverlay();
+      return true;
+    }
+    if (nextPage && dictDefinitionPage + 1 < dictTotalPages) {
+      ++dictDefinitionPage;
       updateDictionaryOverlay();
       return true;
     }
@@ -667,14 +666,15 @@ bool EpubReaderActivity::handleDictionaryModeInput() {
   }
 
   bool moved = false;
-  dictLineNavigator.onPressAndContinuous({MappedInputManager::Button::PageBack, MappedInputManager::Button::Up},
-                                         [this, &moved] { moved = moveDictionaryRow(-1) || moved; });
-  dictLineNavigator.onPressAndContinuous({MappedInputManager::Button::PageForward, MappedInputManager::Button::Down},
-                                         [this, &moved] { moved = moveDictionaryRow(1) || moved; });
-  dictWordNavigator.onPressAndContinuous({MappedInputManager::Button::Left},
-                                         [this, &moved] { moved = moveDictionaryWord(-1) || moved; });
-  dictWordNavigator.onPressAndContinuous({MappedInputManager::Button::Right},
-                                         [this, &moved] { moved = moveDictionaryWord(1) || moved; });
+  if (releasedAny({MappedInputManager::Button::PageBack, MappedInputManager::Button::Up})) {
+    moved = moveDictionaryRow(-1);
+  } else if (releasedAny({MappedInputManager::Button::PageForward, MappedInputManager::Button::Down})) {
+    moved = moveDictionaryRow(1);
+  } else if (mappedInput.wasReleased(MappedInputManager::Button::Left)) {
+    moved = moveDictionaryWord(-1);
+  } else if (mappedInput.wasReleased(MappedInputManager::Button::Right)) {
+    moved = moveDictionaryWord(1);
+  }
 
   if (moved) {
     clearDictionaryPopupState();
@@ -1271,21 +1271,13 @@ void EpubReaderActivity::prewarmVisibleDictionaryDefinitionText() const {
   }
 }
 
-EpubReaderActivity::DictionaryOverlayRect EpubReaderActivity::dictionaryPopupRect(
-    const DictionaryWordInfo& word) const {
+EpubReaderActivity::DictionaryOverlayRect EpubReaderActivity::dictionaryPopupRect(const DictionaryWordInfo&) const {
   const int screenWidth = renderer.getScreenWidth();
   const int screenHeight = renderer.getScreenHeight();
   const int margin = 8;
-  const int lineHeight = std::max(1, renderer.getLineHeight(dictReaderFontId));
   const int width = std::max(80, screenWidth - margin * 2);
-  const int height = std::min(std::max(150, screenHeight / 3), std::max(80, screenHeight - margin * 2));
-  int y = word.screenY + lineHeight + 8;
-  if (y + height > screenHeight - margin) {
-    y = word.screenY - height - 8;
-  }
-  if (y < margin) {
-    y = screenHeight - height - margin;
-  }
+  const int height = std::min(std::max(160, (screenHeight * 3) / 4), std::max(80, screenHeight - margin * 2));
+  int y = screenHeight - height - margin;
   if (y < margin) y = margin;
   return DictionaryOverlayRect{margin, y, width, height};
 }

@@ -13,7 +13,6 @@
 #include "BookmarkStore.h"
 #include "EpubReaderMenuActivity.h"
 #include "activities/Activity.h"
-#include "util/ButtonNavigator.h"
 
 class Page;
 
@@ -109,8 +108,6 @@ class EpubReaderActivity final : public Activity {
   std::vector<std::string> dictWrappedLines;
   std::vector<DictionaryWordInfo> dictWords;
   std::vector<DictionaryRow> dictRows;
-  ButtonNavigator dictLineNavigator{180, 260};
-  ButtonNavigator dictWordNavigator{120, 220};
   DictionaryOverlayRegion dictOverlayRegions[MAX_DICTIONARY_OVERLAY_REGIONS];
   size_t dictOverlayRegionCount = 0;
 
