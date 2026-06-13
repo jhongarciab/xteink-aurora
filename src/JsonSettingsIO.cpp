@@ -378,7 +378,15 @@ bool loadSettingsDirect(CrossPointSettings& s, const JsonDocument& doc, bool* ne
                                              : CrossPointSettings::LONG_PRESS_OFF;
     if (needsResave) *needsResave = true;
   }
-  loadEnum("shortPwrBtn", s.shortPwrBtn, CrossPointSettings::SHORT_PWRBTN_COUNT);
+  {
+    const uint8_t rawShortPwrBtn = doc["shortPwrBtn"] | s.shortPwrBtn;
+    if (rawShortPwrBtn < static_cast<uint8_t>(CrossPointSettings::SHORT_PWRBTN_COUNT)) {
+      s.shortPwrBtn = rawShortPwrBtn;
+    } else {
+      s.shortPwrBtn = CrossPointSettings::IGNORE;
+      if (needsResave) *needsResave = true;
+    }
+  }
   loadEnum("tiltPageTurn", s.tiltPageTurn, CrossPointSettings::TILT_PAGE_TURN_COUNT);
   loadEnum("sleepTimeout", s.sleepTimeout, CrossPointSettings::SLEEP_TIMEOUT_COUNT);
   loadToggle("showHiddenFiles", s.showHiddenFiles);

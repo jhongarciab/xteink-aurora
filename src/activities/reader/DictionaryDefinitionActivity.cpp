@@ -267,15 +267,17 @@ void DictionaryDefinitionActivity::loop() {
 }
 
 void DictionaryDefinitionActivity::render(RenderLock&&) {
-  renderer.clearScreen();
-  std::optional<FontCacheManager::PrewarmScope> pageFontPrewarm;
-  if (page) {
-    if (auto* fcm = renderer.getFontCacheManager()) {
-      pageFontPrewarm.emplace(*fcm);
-      page->recordFontUsage(*fcm, readerFontId, SETTINGS.bionicReading);
-      pageFontPrewarm->endScanAndPrewarm();
+  if (renderPageBackground) {
+    renderer.clearScreen();
+    std::optional<FontCacheManager::PrewarmScope> pageFontPrewarm;
+    if (page) {
+      if (auto* fcm = renderer.getFontCacheManager()) {
+        pageFontPrewarm.emplace(*fcm);
+        page->recordFontUsage(*fcm, readerFontId, SETTINGS.bionicReading);
+        pageFontPrewarm->endScanAndPrewarm();
+      }
+      page->render(renderer, readerFontId, marginLeft, marginTop, SETTINGS.bionicReading);
     }
-    page->render(renderer, readerFontId, marginLeft, marginTop, SETTINGS.bionicReading);
   }
 
   const Rect rect = overlayRect();

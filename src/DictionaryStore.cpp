@@ -15,13 +15,12 @@
 #include <cstring>
 #include <utility>
 
-#include "CrossPointSettings.h"
 #include "fontIds.h"
 
 namespace {
 constexpr uint32_t CACHE_MAGIC = 0x44435458;  // DCTX
 constexpr uint8_t NULL_TERMINATED_TYPES[] = {'m', 'l', 'g', 't', 'x', 'y', 'k', 'w', 'h', 'n', 'r'};
-constexpr uint8_t DEFINITION_TEXT_SIZE_CONFIG_VERSION = 2;
+constexpr uint8_t DEFINITION_TEXT_SIZE_CONFIG_VERSION = 4;
 constexpr size_t MAX_METADATA_TEXT_BYTES = 96;
 constexpr size_t SAFE_MAX_DEFINITION_BYTES = 8192;
 constexpr size_t SAFE_MIN_DEFINITION_BYTES = 1024;
@@ -1026,7 +1025,7 @@ DictionaryStore& DictionaryStore::getInstance() {
 void DictionaryStore::loadConfig() {
   configLoaded = true;
   activeIfoPath.clear();
-  definitionTextSize = DEF_TEXT_MEDIUM;
+  definitionTextSize = DEF_TEXT_SMALL;
   if (!Storage.exists(CONFIG_PATH)) return;
 
   const String json = Storage.readFile(CONFIG_PATH);
@@ -1039,20 +1038,13 @@ void DictionaryStore::loadConfig() {
   const uint8_t sizeVersion = doc["definitionTextSizeVersion"] | static_cast<uint8_t>(0);
   if (sizeVersion == 0) {
     definitionTextSize = storedSize == 2 ? static_cast<uint8_t>(DEF_TEXT_LARGE)
-                                         : static_cast<uint8_t>(DEF_TEXT_MEDIUM);
+                                         : static_cast<uint8_t>(DEF_TEXT_SMALL);
   } else if (sizeVersion == 1) {
-    switch (storedSize) {
-      case 0:
-        definitionTextSize = DEF_TEXT_SMALL;
-        break;
-      case 2:
-        definitionTextSize = DEF_TEXT_LARGE;
-        break;
-      case 1:
-      default:
-        definitionTextSize = DEF_TEXT_MEDIUM;
-        break;
-    }
+    definitionTextSize = storedSize == 2 ? static_cast<uint8_t>(DEF_TEXT_LARGE)
+                                         : static_cast<uint8_t>(DEF_TEXT_SMALL);
+  } else if (sizeVersion < DEFINITION_TEXT_SIZE_CONFIG_VERSION) {
+    definitionTextSize = storedSize >= 3 ? static_cast<uint8_t>(DEF_TEXT_LARGE)
+                                         : static_cast<uint8_t>(DEF_TEXT_SMALL);
   } else if (storedSize >= 0 && storedSize < DEF_TEXT_SIZE_COUNT) {
     definitionTextSize = static_cast<uint8_t>(storedSize);
   }
@@ -1275,87 +1267,18 @@ bool DictionaryStore::setDefinitionTextSize(const uint8_t size) {
   return saveConfig();
 }
 
-int dictionaryBuiltInFontId(const uint8_t family, const uint8_t size) {
-  switch (family) {
-    case CrossPointSettings::NOTOSANS:
-      switch (size) {
-        case CrossPointSettings::X_SMALL:
-          return NOTOSANS_10_FONT_ID;
-        case CrossPointSettings::SMALL:
-          return NOTOSANS_12_FONT_ID;
-        case CrossPointSettings::MEDIUM:
-        default:
-          return NOTOSANS_14_FONT_ID;
-        case CrossPointSettings::LARGE:
-          return NOTOSANS_16_FONT_ID;
-        case CrossPointSettings::EXTRA_LARGE:
-          return NOTOSANS_18_FONT_ID;
-      }
-    case CrossPointSettings::LEXEND:
-      switch (size) {
-        case CrossPointSettings::X_SMALL:
-          return LEXEND_10_FONT_ID;
-        case CrossPointSettings::SMALL:
-          return LEXEND_12_FONT_ID;
-        case CrossPointSettings::MEDIUM:
-        default:
-          return LEXEND_14_FONT_ID;
-        case CrossPointSettings::LARGE:
-          return LEXEND_16_FONT_ID;
-        case CrossPointSettings::EXTRA_LARGE:
-          return LEXEND_18_FONT_ID;
-      }
-    case CrossPointSettings::BOOKERLY:
-    default:
-      switch (size) {
-        case CrossPointSettings::X_SMALL:
-          return BOOKERLY_10_FONT_ID;
-        case CrossPointSettings::SMALL:
-          return BOOKERLY_12_FONT_ID;
-        case CrossPointSettings::MEDIUM:
-        default:
-          return BOOKERLY_14_FONT_ID;
-        case CrossPointSettings::LARGE:
-          return BOOKERLY_16_FONT_ID;
-        case CrossPointSettings::EXTRA_LARGE:
-          return BOOKERLY_18_FONT_ID;
-      }
-  }
-}
-
-int DictionaryStore::getDefinitionFontId(const int readerFontId) const {
+int DictionaryStore::getDefinitionFontId(const int) const {
   if (!configLoaded) {
     const_cast<DictionaryStore*>(this)->loadConfig();
   }
 
-  if (definitionTextSize == DEF_TEXT_MEDIUM) {
-    return readerFontId;
-  }
-
-  int size = SETTINGS.fontSize < CrossPointSettings::FONT_SIZE_COUNT ? SETTINGS.fontSize : CrossPointSettings::MEDIUM;
   switch (definitionTextSize) {
-    case DEF_TEXT_X_LARGE:
-      size = std::min<int>(CrossPointSettings::EXTRA_LARGE, size + 2);
-      break;
-    case DEF_TEXT_LARGE:
-      size = std::min<int>(CrossPointSettings::EXTRA_LARGE, size + 1);
-      break;
-    case DEF_TEXT_X_SMALL:
-      size = std::max<int>(CrossPointSettings::X_SMALL, size - 2);
-      break;
     case DEF_TEXT_SMALL:
-      size = std::max<int>(CrossPointSettings::X_SMALL, size - 1);
-      break;
-    case DEF_TEXT_MEDIUM:
     default:
-      break;
+      return UI_10_FONT_ID;
+    case DEF_TEXT_LARGE:
+      return UI_12_FONT_ID;
   }
-  if (SETTINGS.sdFontFamilyName[0] != '\0' && SETTINGS.sdFontIdResolver) {
-    const int id = SETTINGS.sdFontIdResolver(SETTINGS.sdFontResolverCtx, SETTINGS.sdFontFamilyName,
-                                             static_cast<uint8_t>(size));
-    if (id != 0) return id;
-  }
-  return dictionaryBuiltInFontId(SETTINGS.fontFamily, static_cast<uint8_t>(size));
 }
 
 bool DictionaryStore::hasActiveDictionary() const {

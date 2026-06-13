@@ -26,7 +26,7 @@ void DictionaryActivity::onEnter() {
 }
 
 void DictionaryActivity::selectCurrent() {
-  if (selectedIndex == 0) {
+  if (selectedIndex == ACTION_DEFINITION_TEXT_SIZE) {
     const uint8_t nextSize =
         static_cast<uint8_t>((DICTIONARIES.getDefinitionTextSize() + 1) % DictionaryStore::DEF_TEXT_SIZE_COUNT);
     DICTIONARIES.setDefinitionTextSize(nextSize);
@@ -134,18 +134,12 @@ void DictionaryActivity::render(RenderLock&&) {
 
   auto textSizeLabel = []() -> const char* {
     switch (DICTIONARIES.getDefinitionTextSize()) {
-      case DictionaryStore::DEF_TEXT_X_SMALL:
-        return tr(STR_X_SMALL);
       case DictionaryStore::DEF_TEXT_SMALL:
         return tr(STR_SMALL);
-      case DictionaryStore::DEF_TEXT_MEDIUM:
-        return tr(STR_MEDIUM);
       case DictionaryStore::DEF_TEXT_LARGE:
         return tr(STR_LARGE);
-      case DictionaryStore::DEF_TEXT_X_LARGE:
-        return tr(STR_X_LARGE);
       default:
-        return tr(STR_MEDIUM);
+        return tr(STR_SMALL);
     }
   };
 

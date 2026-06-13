@@ -41,11 +41,8 @@ struct DictionaryLookupResult {
 class DictionaryStore {
  public:
   enum DefinitionTextSize : uint8_t {
-    DEF_TEXT_X_SMALL = 0,
-    DEF_TEXT_SMALL = 1,
-    DEF_TEXT_MEDIUM = 2,
-    DEF_TEXT_LARGE = 3,
-    DEF_TEXT_X_LARGE = 4,
+    DEF_TEXT_SMALL = 0,
+    DEF_TEXT_LARGE = 1,
     DEF_TEXT_SIZE_COUNT
   };
 
@@ -98,7 +95,7 @@ class DictionaryStore {
   bool configLoaded = false;
   bool scanned = false;
   bool activeOnlyLoaded = false;
-  uint8_t definitionTextSize = DEF_TEXT_MEDIUM;
+  uint8_t definitionTextSize = DEF_TEXT_SMALL;
 
   bool loadEntryFromIfoPath(const std::string& ifoPath, DictionaryEntry& entry) const;
   bool ensureActiveEntryLoaded();

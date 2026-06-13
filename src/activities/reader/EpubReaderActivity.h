@@ -3,12 +3,7 @@
 #include <Epub/FootnoteEntry.h>
 #include <Epub/Section.h>
 
-#include <cstddef>
-#include <cstdint>
-#include <memory>
 #include <optional>
-#include <string>
-#include <vector>
 
 #include "BookmarkStore.h"
 #include "EpubReaderMenuActivity.h"
@@ -53,63 +48,6 @@ class EpubReaderActivity final : public Activity {
   int currentOverlayPageNumber = -1;
   int currentOverlayPageMarginLeft = 0;
   int currentOverlayPageMarginTop = 0;
-
-  struct DictionaryWordInfo {
-    std::string text;
-    std::string lookupText;
-    int16_t screenX = 0;
-    int16_t screenY = 0;
-    int16_t width = 0;
-    int16_t row = 0;
-    int continuationIndex = -1;
-    int continuationOf = -1;
-  };
-
-  struct DictionaryRow {
-    int16_t y = 0;
-    std::vector<int> wordIndices;
-  };
-
-  struct DictionaryOverlayRect {
-    int x = 0;
-    int y = 0;
-    int width = 0;
-    int height = 0;
-  };
-
-  struct DictionaryOverlayRegion {
-    DictionaryOverlayRect rect;
-    uint8_t* buffer = nullptr;
-    size_t capacity = 0;
-    size_t size = 0;
-    bool stored = false;
-  };
-
-  static constexpr size_t MAX_DICTIONARY_OVERLAY_REGIONS = 3;
-
-  bool dictModeActive = false;
-  bool dictPopupVisible = false;
-  bool dictDefinitionTruncated = false;
-  bool dictPageWordsReady = false;
-  int dictCurrentRow = 0;
-  int dictCurrentWordInRow = 0;
-  int dictDefinitionPage = 0;
-  int dictLinesPerPage = 1;
-  int dictTotalPages = 1;
-  int dictReaderFontId = 0;
-  int dictDefinitionFontId = 0;
-  int dictPageSpineIndex = -1;
-  int dictPageNumber = -1;
-  int dictOverlayMarginLeft = 0;
-  int dictOverlayMarginTop = 0;
-  std::string dictLookupWord;
-  std::string dictHeadword;
-  std::string dictDefinition;
-  std::vector<std::string> dictWrappedLines;
-  std::vector<DictionaryWordInfo> dictWords;
-  std::vector<DictionaryRow> dictRows;
-  DictionaryOverlayRegion dictOverlayRegions[MAX_DICTIONARY_OVERLAY_REGIONS];
-  size_t dictOverlayRegionCount = 0;
 
   struct ReaderSettingsSnapshot {
     uint8_t darkMode = 0;
@@ -164,39 +102,6 @@ class EpubReaderActivity final : public Activity {
   void cacheCurrentPageForOverlay(const std::shared_ptr<Page>& page, int marginLeft, int marginTop);
   void invalidateCurrentOverlayPageCache();
   std::shared_ptr<Page> loadCurrentPageForOverlay(int& outMarginLeft, int& outMarginTop);
-  bool handleDictionaryModeToggle();
-  bool handleDictionaryModeInput();
-  void enterDictionaryMode();
-  void exitDictionaryMode();
-  void resetDictionaryPageState();
-  void clearDictionaryPopupState();
-  bool rebuildDictionaryWordsFromPage(const std::shared_ptr<Page>& page, int marginLeft, int marginTop);
-  void prepareDictionaryReaderFontMetrics(const std::shared_ptr<Page>& page);
-  int measureDictionaryWordWidth(const char* text) const;
-  void mergeDictionaryHyphenatedWords();
-  const DictionaryWordInfo* currentDictionaryWord() const;
-  int currentDictionaryWordIndex() const;
-  bool moveDictionaryRow(int delta);
-  bool moveDictionaryWord(int delta);
-  void updateDictionaryOverlay();
-  bool redrawDictionaryModeFast();
-  void lookupDictionaryCurrentWord();
-  void setDictionaryPopupText(std::string headword, std::string definition, bool truncated);
-  void prepareDictionaryDefinitionFontMetrics();
-  void wrapDictionaryDefinition();
-  int measureDictionaryDefinitionText(const char* text) const;
-  void prewarmCurrentDictionaryText() const;
-  void prewarmVisibleDictionaryDefinitionText() const;
-  DictionaryOverlayRect dictionaryPopupRect(const DictionaryWordInfo& word) const;
-  bool clampDictionaryOverlayRect(DictionaryOverlayRect& rect) const;
-  size_t collectDictionaryOverlayRects(DictionaryOverlayRect* rects, size_t maxRects) const;
-  bool storeDictionaryOverlayBaseRegions();
-  bool restoreDictionaryOverlayBaseRegions() const;
-  void invalidateDictionaryOverlayRegionCache();
-  void freeDictionaryOverlayRegionCache();
-  void drawDictionaryModeOverlay();
-  void drawDictionaryCursor();
-  void drawDictionaryPopup();
 
   // Footnote navigation
   void navigateToHref(const std::string& href, bool savePosition = false);
@@ -224,6 +129,5 @@ class EpubReaderActivity final : public Activity {
   void loop() override;
   void render(RenderLock&& lock) override;
   bool isReaderActivity() const override { return true; }
-  bool skipLoopDelay() override { return dictModeActive; }
   ScreenshotInfo getScreenshotInfo() const override;
 };
