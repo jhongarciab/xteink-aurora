@@ -1243,6 +1243,11 @@ void EpubReaderActivity::render(RenderLock&& lock) {
               popupFn)) {
         LOG_ERR("ERS", "Failed to persist page data to SD");
         section.reset();
+        renderer.clearScreen();
+        renderer.drawCenteredText(UI_12_FONT_ID, 300, tr(STR_PAGE_LOAD_ERROR), true, EpdFontFamily::BOLD);
+        renderStatusBar();
+        renderer.displayBuffer();
+        automaticPageTurnActive = false;
         return;
       }
       releaseReaderSdFontCachesForLowMemory(renderer, "ERS", "section cache build");
