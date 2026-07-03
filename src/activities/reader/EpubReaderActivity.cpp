@@ -1523,6 +1523,32 @@ void EpubReaderActivity::renderContents(std::shared_ptr<Page> page, const int or
   const auto tDisplay = millis();
 
   const bool needsGrayscale = enableTextAA || enableImageGrayscaleOnly;
+  ReaderUtils::TiledGrayscaleTimings tiledTimings;
+  const bool tiledGrayscale =
+      needsGrayscale && ReaderUtils::renderTiledGrayscale(
+                           renderer, "ERS",
+                           [&]() {
+                             if (enableImageGrayscaleOnly) {
+                               page->renderImages(renderer, orientedMarginLeft, orientedMarginTop);
+                             } else {
+                               page->render(renderer, SETTINGS.getReaderFontId(), orientedMarginLeft,
+                                            orientedMarginTop, SETTINGS.bionicReading);
+                             }
+                             renderStatusBar();
+                           },
+                           &tiledTimings);
+
+  if (tiledGrayscale) {
+    const auto tEnd = millis();
+    fcm->logStats("gray");
+    LOG_DBG("ERS",
+            "Page render (tiled): prewarm=%lums bw_render=%lums display=%lums "
+            "gray_lsb=%lums gray_msb=%lums gray_display=%lums cleanup=%lums total=%lums",
+            tPrewarm - t0, tBwRender - tPrewarm, tDisplay - tBwRender, tiledTimings.grayLsb - tDisplay,
+            tiledTimings.grayMsb - tiledTimings.grayLsb, tiledTimings.grayDisplay - tiledTimings.grayMsb,
+            tiledTimings.cleanup - tiledTimings.grayDisplay, tEnd - t0);
+    return;
+  }
 
   // Save BW buffer to reset framebuffer and controller state after grayscale data sync.
   const auto bwStoreHeapBefore = MemoryBudget::snapshot();

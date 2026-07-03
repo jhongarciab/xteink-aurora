@@ -188,6 +188,10 @@ void ImageBlock::render(GfxRenderer& renderer, const int x, const int y) {
     return;
   }
 
+  if (!renderer.glyphIntersectsStrip(x, y, x + width - 1, y + height - 1)) {
+    return;
+  }
+
   // Try to render from cache first
   std::string cachePath = getCachePath(imagePath);
   if (renderFromCache(renderer, cachePath, x, y, width, height)) {

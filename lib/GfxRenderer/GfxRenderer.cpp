@@ -7,6 +7,7 @@
 #include <Utf8.h>
 
 #include <algorithm>
+#include <cassert>
 #include <climits>
 
 #include "FontCacheManager.h"
@@ -358,14 +359,24 @@ void GfxRenderer::drawPixelRaw(const int x, const int y, const bool state) const
     return;
   }
 
+  uint8_t* target = frameBuffer;
+  uint32_t rowY = static_cast<uint32_t>(phyY);
+  if (_stripActive) {
+    if (phyY < _stripY0 || phyY >= _stripY0 + _stripRows) {
+      return;
+    }
+    target = _stripBuf;
+    rowY = static_cast<uint32_t>(phyY - _stripY0);
+  }
+
   // Calculate byte position and bit position
-  const uint32_t byteIndex = static_cast<uint32_t>(phyY) * panelWidthBytes + (phyX / 8);
+  const uint32_t byteIndex = rowY * panelWidthBytes + (phyX / 8);
   const uint8_t bitPosition = 7 - (phyX % 8);  // MSB first
 
   if (state) {
-    frameBuffer[byteIndex] &= ~(1 << bitPosition);  // Clear bit
+    target[byteIndex] &= ~(1 << bitPosition);  // Clear bit
   } else {
-    frameBuffer[byteIndex] |= 1 << bitPosition;  // Set bit
+    target[byteIndex] |= 1 << bitPosition;  // Set bit
   }
 }
 
@@ -703,9 +714,16 @@ void GfxRenderer::fillRectImpl(const int x, const int y, const int width, const 
 
   const int physicalX0 = std::min(cornerAX, cornerBX);
   const int physicalX1 = std::max(cornerAX, cornerBX);
-  const int physicalY0 = std::min(cornerAY, cornerBY);
-  const int physicalY1 = std::max(cornerAY, cornerBY);
+  int physicalY0 = std::min(cornerAY, cornerBY);
+  int physicalY1 = std::max(cornerAY, cornerBY);
   if (physicalX0 < 0 || physicalX1 >= panelWidth || physicalY0 < 0 || physicalY1 >= panelHeight) return;
+
+  uint8_t* target = getWriteTarget();
+  const int originY = getWriteOriginY();
+  const int writeRows = getWriteRows();
+  physicalY0 = std::max(physicalY0, originY);
+  physicalY1 = std::min(physicalY1, originY + writeRows - 1);
+  if (physicalY0 > physicalY1) return;
 
   const int byteStart = physicalX0 >> 3;
   const int byteEnd = physicalX1 >> 3;
@@ -718,7 +736,7 @@ void GfxRenderer::fillRectImpl(const int x, const int y, const int width, const 
     const bool fillBlack = invertForDarkMode ? color == Color::White : color == Color::Black;
     const uint8_t fillByte = fillBlack ? 0x00u : 0xFFu;
     for (int physicalY = physicalY0; physicalY <= physicalY1; ++physicalY) {
-      uint8_t* row = frameBuffer + static_cast<uint32_t>(physicalY) * panelStride;
+      uint8_t* row = target + static_cast<uint32_t>(physicalY - originY) * panelStride;
       if (byteStart == byteEnd) {
         const uint8_t mask = headMask & tailMask;
         if (fillBlack) {
@@ -812,7 +830,7 @@ void GfxRenderer::fillRectImpl(const int x, const int y, const int width, const 
 
     for (int physicalY = physicalY0; physicalY <= physicalY1; ++physicalY) {
       const uint8_t whiteMask = static_cast<uint8_t>(~blackMasks[physicalY & 3]);
-      uint8_t* row = frameBuffer + static_cast<uint32_t>(physicalY) * panelStride;
+      uint8_t* row = target + static_cast<uint32_t>(physicalY - originY) * panelStride;
       if (byteStart == byteEnd) {
         const uint8_t rectMask = headMask & tailMask;
         row[byteStart] = static_cast<uint8_t>((row[byteStart] & ~rectMask) | (rectMask & whiteMask));
@@ -1300,7 +1318,42 @@ static unsigned long start_ms = 0;
 void GfxRenderer::clearScreen(const uint8_t color) const {
   start_ms = millis();
   const uint8_t effectiveColor = (darkMode && renderMode == BW && color == 0xFF) ? 0x00 : color;
+  if (_stripActive) {
+    memset(_stripBuf, effectiveColor, static_cast<size_t>(panelWidthBytes) * static_cast<size_t>(_stripRows));
+    return;
+  }
   display.clearScreen(effectiveColor);
+}
+
+void GfxRenderer::beginStripTarget(uint8_t* scratch, int stripY0, int stripRows) const {
+  assert(scratch != nullptr && stripRows > 0 && stripY0 >= 0 && stripY0 <= static_cast<int>(panelHeight) - stripRows);
+  _stripBuf = scratch;
+  _stripY0 = stripY0;
+  _stripRows = stripRows;
+  _stripActive = true;
+}
+
+void GfxRenderer::endStripTarget() const {
+  _stripActive = false;
+  _stripBuf = nullptr;
+  _stripY0 = 0;
+  _stripRows = 0;
+}
+
+bool GfxRenderer::glyphIntersectsStrip(int x0, int y0, int x1, int y1) const {
+  if (!_stripActive) {
+    return true;
+  }
+
+  int ax = 0;
+  int ay = 0;
+  int bx = 0;
+  int by = 0;
+  rotateCoordinates(orientation, x0, y0, &ax, &ay, panelWidth, panelHeight);
+  rotateCoordinates(orientation, x1, y1, &bx, &by, panelWidth, panelHeight);
+  const int minY = std::min(ay, by);
+  const int maxY = std::max(ay, by);
+  return !(maxY < _stripY0 || minY >= _stripY0 + _stripRows);
 }
 
 void GfxRenderer::invertScreen() const {
@@ -1743,11 +1796,51 @@ size_t GfxRenderer::getBufferSize() const { return frameBufferSize; }
 // unused
 // void GfxRenderer::grayscaleRevert() const { display.grayscaleRevert(); }
 
+void GfxRenderer::displayGrayscaleBase(HalDisplay::RefreshMode fallback) const {
+  display.displayGrayscaleBase(fallback, fadingFix);
+}
+
+void GfxRenderer::preconditionGrayscale() const { display.preconditionGrayscale(); }
+
+void GfxRenderer::preconditionGrayscale(int x, int y, int w, int h) const {
+  if (w <= 0 || h <= 0) return;
+
+  int ax = 0;
+  int ay = 0;
+  int bx = 0;
+  int by = 0;
+  rotateCoordinates(orientation, x, y, &ax, &ay, panelWidth, panelHeight);
+  rotateCoordinates(orientation, x + w - 1, y + h - 1, &bx, &by, panelWidth, panelHeight);
+
+  int x0 = std::min(ax, bx);
+  int x1 = std::max(ax, bx);
+  int y0 = std::min(ay, by);
+  int y1 = std::max(ay, by);
+  x0 = std::max(x0, 0);
+  y0 = std::max(y0, 0);
+  x1 = std::min(x1, static_cast<int>(panelWidth) - 1);
+  y1 = std::min(y1, static_cast<int>(panelHeight) - 1);
+  if (x1 < x0 || y1 < y0) return;
+
+  display.preconditionGrayscale(static_cast<uint16_t>(x0), static_cast<uint16_t>(y0),
+                                static_cast<uint16_t>(x1 - x0 + 1), static_cast<uint16_t>(y1 - y0 + 1));
+}
+
 void GfxRenderer::copyGrayscaleLsbBuffers() const { display.copyGrayscaleLsbBuffers(frameBuffer); }
 
 void GfxRenderer::copyGrayscaleMsbBuffers() const { display.copyGrayscaleMsbBuffers(frameBuffer); }
 
 void GfxRenderer::displayGrayBuffer() const { display.displayGrayBuffer(fadingFix); }
+
+void GfxRenderer::writeGrayscalePlaneStrip(bool lsbPlane, const uint8_t* scratch, int yStart, int numRows) const {
+  if (scratch == nullptr) {
+    return;
+  }
+  assert(yStart >= 0 && numRows > 0 && yStart <= static_cast<int>(panelHeight) - numRows);
+  display.writeGrayscalePlaneStrip(lsbPlane, scratch, static_cast<uint16_t>(yStart), static_cast<uint16_t>(numRows));
+}
+
+bool GfxRenderer::supportsStripGrayscale() const { return display.supportsStripGrayscale(); }
 
 void GfxRenderer::freeBwBufferChunks() {
   for (auto& bwBufferChunk : bwBufferChunks) {
