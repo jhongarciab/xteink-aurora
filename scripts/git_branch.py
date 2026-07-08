@@ -17,6 +17,15 @@ import re
 import subprocess
 import sys
 
+try:
+    _SCRIPTS_DIR = os.path.dirname(os.path.abspath(__file__))
+except NameError:
+    _SCRIPTS_DIR = os.path.join(os.getcwd(), "scripts")
+if _SCRIPTS_DIR not in sys.path:
+    sys.path.insert(0, _SCRIPTS_DIR)
+
+from write_if_changed import write_if_changed
+
 COUNTER_DIR = "artifacts"
 RELEASE_COUNTER_FILE_TEMPLATE = ".release-counter-{base}.txt"
 DEV_COUNTER_FILE_TEMPLATE = ".dev-counter-{base}-r{release}.txt"
@@ -188,30 +197,6 @@ def release_number_from_tag(base_version):
     return int(match.group(1)), tag
 
 
-def _write_if_changed(path, content):
-    existing = None
-    if os.path.isfile(path):
-        try:
-            with open(path, "r", encoding="utf-8") as file:
-                existing = file.read()
-        except OSError as e:
-            warn(f"Failed to read existing {path}: {e}")
-
-    if existing == content:
-        return
-
-    parent = os.path.dirname(path)
-    if parent:
-        os.makedirs(parent, exist_ok=True)
-    temp_path = path + ".tmp"
-    try:
-        with open(temp_path, "w", encoding="utf-8", newline="\n") as file:
-            file.write(content)
-        os.replace(temp_path, path)
-    except OSError as e:
-        warn(f"Failed to write {path}: {e}")
-
-
 def _cpp_string_literal(value):
     escaped = value.replace("\\", "\\\\").replace('"', '\\"')
     return f'"{escaped}"'
@@ -237,7 +222,7 @@ def write_version_artifacts(
     }
     json_path = os.path.join(project_dir, BUILD_VERSION_JSON_REL)
     json_content = json.dumps(metadata, indent=2) + "\n"
-    _write_if_changed(json_path, json_content)
+    write_if_changed(json_path, json_content)
 
     inc_path = os.path.join(project_dir, VERSION_INC_REL)
     inc_content = (
@@ -248,7 +233,7 @@ def write_version_artifacts(
         f"const int CPR_VCODEX_RELEASE_SEQ = {release_number};\n"
         f"const char CPR_VCODEX_BUILD_KIND[] = {_cpp_string_literal(build_kind)};\n"
     )
-    _write_if_changed(inc_path, inc_content)
+    write_if_changed(inc_path, inc_content)
 
 
 def next_dev_counter(project_dir, base_version, release_number):
