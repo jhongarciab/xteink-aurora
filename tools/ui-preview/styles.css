@@ -69,7 +69,8 @@ button.primary { border-color: #263126; background: #263126; color: white; }
 /* Firmware-faithful Lyra Carousel Home. Coordinates are proportional to the
    528x792 X3 portrait layout and intentionally overlap at the screen edges. */
 .lyra-home { position: relative; width: 100%; height: 100%; overflow: hidden; background: var(--paper); }
-.lyra-topline { position: absolute; inset: 0 0 auto; height: 7.07%; padding: 10px 20px 0; display: flex; align-items: flex-start; justify-content: flex-end; gap: 8px; font-size: 10px; }
+.lyra-topline { position: absolute; inset: 0 0 auto; height: 7.07%; padding: 10px 20px 0; display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; font-size: 10px; }
+.lyra-power { display: flex; align-items: flex-start; gap: 6px; }
 .lyra-battery { width: 17px; height: 12px; margin-top: 1px; border: 1.5px solid var(--ink); position: relative; }
 .lyra-battery::before { content: ""; position: absolute; inset: 2px; right: 4px; background: var(--ink); }
 .lyra-battery::after { content: ""; position: absolute; top: 3px; right: -4px; width: 3px; height: 5px; background: var(--ink); }
@@ -91,7 +92,7 @@ button.primary { border-color: #263126; background: #263126; color: white; }
 .carousel-author, .carousel-title { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .carousel-author { margin-top: 6px; font-size: 11px; }
 .carousel-title { margin-top: 3px; font-size: 11px; font-weight: 700; }
-.shortcut-strip { position: absolute; z-index: 5; left: 0; right: 0; bottom: 5.05%; height: 7.58%; display: grid; grid-template-columns: repeat(5, 1fr); background: var(--paper); }
+.shortcut-strip { position: absolute; z-index: 5; left: 0; right: 0; bottom: 0; height: 7.58%; display: grid; grid-template-columns: repeat(5, 1fr); background: var(--paper); }
 .shortcut-tile { display: grid; place-items: center; position: relative; color: var(--ink); }
 .shortcut-icon { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 5px; }
 .shortcut-tile.selected .shortcut-icon { background: var(--ink); color: var(--paper); }
@@ -99,27 +100,19 @@ button.primary { border-color: #263126; background: #263126; color: white; }
 .shortcut-arrow { position: absolute; top: 50%; translate: 0 -50%; font-size: 24px; line-height: 1; }
 .shortcut-arrow.left { left: 7px; }
 .shortcut-arrow.right { right: 7px; }
-.hardware-hints { position: absolute; z-index: 6; inset: auto 0 0; height: 5.05%; }
-.hardware-key { position: absolute; bottom: 0; width: 15.15%; height: 100%; display: grid; place-items: center; border: 1px solid var(--ink); border-bottom: 0; border-radius: 5px 5px 0 0; background: var(--paper); font-size: 9px; }
-.hardware-key.empty { height: 38%; }
-.hardware-key.k1 { left: 12.31%; }.hardware-key.k2 { left: 29.73%; }.hardware-key.k3 { left: 55.11%; }.hardware-key.k4 { left: 72.54%; }
 .display.dark .cover-tile.center { box-shadow: 0 0 0 3px var(--paper); }
 
 /* Shared firmware activity chrome, following LyraTheme metrics. */
 .firmware-screen { position: relative; width: 100%; height: 100%; overflow: hidden; background: var(--paper); color: var(--ink); }
 .fw-header { position: absolute; top: .63%; left: 0; width: 100%; height: 10.61%; border-bottom: 2px solid var(--ink); }
-.fw-header-date { position: absolute; top: 6px; right: 56px; font-size: 9px; }
-.fw-header-battery-text { position: absolute; top: 6px; right: 29px; font-size: 9px; }
-.fw-header-battery { position: absolute; top: 7px; right: 12px; width: 14px; height: 10px; border: 1px solid var(--ink); }
+.fw-header-date { position: absolute; top: 6px; right: 20px; font-size: 9px; }
+.fw-header-battery-text { position: absolute; top: 6px; left: 39px; font-size: 9px; }
+.fw-header-battery { position: absolute; top: 7px; left: 20px; width: 14px; height: 10px; border: 1px solid var(--ink); }
 .fw-header-battery::before { content: ""; position: absolute; inset: 2px 4px 2px 2px; background: var(--ink); }
 .fw-header-battery::after { content: ""; position: absolute; top: 2px; right: -3px; width: 2px; height: 4px; background: var(--ink); }
 .fw-header-title { position: absolute; left: 20px; bottom: 12px; font-size: 14px; font-weight: 800; }
 .fw-header-context { margin-left: 8px; font-size: 9px; font-weight: 400; }
 .fw-version { position: absolute; right: 20px; bottom: 13px; font-size: 8px; }
-.fw-hints { position: absolute; z-index: 10; inset: auto 0 0; height: 5.05%; }
-.fw-key { position: absolute; bottom: 0; width: 15.15%; height: 100%; display: grid; place-items: center; border: 1px solid var(--ink); border-bottom: 0; border-radius: 5px 5px 0 0; background: var(--paper); font-size: 8px; }
-.fw-key.k1 { left: 12.31%; }.fw-key.k2 { left: 29.73%; }.fw-key.k3 { left: 55.11%; }.fw-key.k4 { left: 72.54%; }
-.fw-key.empty { height: 38%; }
 
 /* ReadingStatsActivity.cpp */
 .stats-summary { position: absolute; top: 13.26%; left: 3.79%; right: 3.79%; display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
@@ -150,10 +143,8 @@ button.primary { border-color: #263126; background: #263126; color: white; }
 .fw-list-row strong { display: block; max-width: 61%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 9px; }
 .fw-list-row small { display: block; max-width: 62%; margin-top: 4px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 7px; }
 .fw-list-value { position: absolute; right: 8px; top: 7px; max-width: 32%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 9px; }
-.sync-help { position: absolute; top: 52.9%; left: 20px; right: 20px; font-size: 8px; line-height: 1.45; }
+.sync-help { position: absolute; top: 47.9%; left: 20px; right: 20px; font-size: 8px; line-height: 1.45; }
 .sync-help .status { margin-bottom: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sync-help strong { display: block; margin-bottom: 5px; font-size: 9px; }
-.sync-help p { margin: 0 0 5px; }
 
 /* SettingsActivity.cpp */
 .settings-tabs { position: absolute; top: 11.24%; left: 0; right: 0; height: 5.05%; padding: 4px 20px 0; display: flex; gap: 5px; border-bottom: 1px solid var(--ink); font-size: 8px; }
@@ -161,7 +152,7 @@ button.primary { border-color: #263126; background: #263126; color: white; }
 .settings-tabs span.active { background-color: var(--line); border-bottom: 2px solid var(--ink); }
 .settings-tabs.focused { background-image: radial-gradient(var(--line) .7px, transparent .8px); background-size: 3px 3px; }
 .settings-tabs.focused span.active { background: var(--ink); color: var(--paper); border-radius: 4px; }
-.settings-list { top: 18.31%; bottom: 8.33%; }
+.settings-list { top: 18.31%; bottom: 3.28%; }
 .settings-list .fw-list-row { height: 27px; padding: 7px 9px; margin: 0 20px; border-radius: 4px; }
 .settings-list .fw-list-row strong { max-width: 68%; font-size: 9px; }
 .settings-list .fw-list-value { top: 0; right: 0; height: 27px; padding: 7px 9px; max-width: 35%; }

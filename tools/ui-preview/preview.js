@@ -39,14 +39,10 @@
 
   function firmwareHeader(title, context = "", showVersion = false) {
     return `<header class="fw-header">
-      <span class="fw-header-date">22/07/2026</span><span class="fw-header-battery-text">84%</span><i class="fw-header-battery"></i>
+      <span class="fw-header-date">22/07/2026 14:35</span><i class="fw-header-battery"></i><span class="fw-header-battery-text">84%</span>
       <div class="fw-header-title">${title}${context ? `<span class="fw-header-context">/ ${context}</span>` : ""}</div>
       ${showVersion ? '<span class="fw-version">1.3.0</span>' : ""}
     </header>`;
-  }
-
-  function firmwareHints(labels) {
-    return `<div class="fw-hints">${labels.map((label, index) => `<span class="fw-key${label ? "" : " empty"} k${index + 1}">${label}</span>`).join("")}</div>`;
   }
 
   function listIcon(type) {
@@ -58,7 +54,7 @@
     const selectedShortcut = state.selectedRow - 1;
     const bookTitle = escapeHtml(state.title);
     return `<div class="lyra-home${state.selectedRow === 0 ? " carousel-selected" : ""}">
-      <div class="lyra-topline"><span>22/07/2026</span><span>84%</span><i class="lyra-battery"></i></div>
+      <div class="lyra-topline"><span class="lyra-power"><i class="lyra-battery"></i><span>84%</span></span><span>22/07/2026 14:35</span></div>
       <div class="carousel-zone">
         <div class="cover-tile side left"><div class="cover-fallback">A Wizard<br>of Earthsea</div></div>
         <div class="cover-tile side right"><div class="cover-fallback">The<br>Dispossessed</div></div>
@@ -74,10 +70,6 @@
       </div>
       <div class="shortcut-strip">
         ${shortcutTypes.map((type, index) => `<div class="shortcut-tile${selectedShortcut === index ? " selected" : ""}"><span class="shortcut-icon">${shortcutIcon(type)}</span></div>`).join("")}
-      </div>
-      <div class="hardware-hints">
-        <span class="hardware-key empty k1"></span><span class="hardware-key k2">Select</span>
-        <span class="hardware-key k3">Left</span><span class="hardware-key k4">Right</span>
       </div>
     </div>`;
   }
@@ -97,7 +89,6 @@
       <div class="book-list">${books.map((book, index) => `<div class="book-row${state.selectedRow === index + 1 ? " selected" : ""}">
         <strong>${book[0]}</strong><small>${book[1]}</small><span class="book-meta"><b>${book[2]}</b><small>${book[3]}</small></span>
         <span class="book-progress"><i style="width:${book[4]}%"></i></span></div>`).join("")}</div>
-      ${firmwareHints(["Back", "Select", "Up", "Down"])}
     </div>`;
   }
 
@@ -105,6 +96,7 @@
     const items = [
       ["Get Day", "22/07/2026", "Not connected", "wifi"],
       ["Set Date", "Manual", "", "library"],
+      ["Auto Sync Day", "Automatic", "✓", "settings"],
       ["Choose WiFi", "Automatic", "", "settings"],
       ["Time Zone", "America / Bogotá", "", "settings"],
       ["Date Format", "DD/MM/YYYY", "", "library"]
@@ -113,9 +105,7 @@
       ${firmwareHeader("Sync Day")}
       <div class="fw-list sync-list">${items.map((item, index) => `<div class="fw-list-row${state.selectedRow === index ? " selected" : ""}">
         ${listIcon(item[3])}<strong>${item[0]}</strong><small>${item[1]}</small>${item[2] ? `<span class="fw-list-value">${item[2]}</span>` : ""}</div>`).join("")}</div>
-      <div class="sync-help">${state.selectedRow === 0 ? '<div class="status">Connect Wi-Fi to set the current date and time.</div>' : ""}
-        <strong>How it works</strong><p>Connect to Wi-Fi to obtain the current day.</p><p>You can also set the date manually without a network.</p><p>Your selected time zone controls the displayed local date.</p></div>
-      ${firmwareHints(["Back", "Select", "Up", "Down"])}
+      <div class="sync-help">${state.selectedRow === 0 ? '<div class="status">Connect Wi-Fi to set the current date and time.</div>' : ""}</div>
     </div>`;
   }
 
@@ -131,7 +121,6 @@
       ${firmwareHeader("Settings", "Display", true)}
       <div class="settings-tabs${state.selectedRow === 0 ? " focused" : ""}">${categories.map((category, index) => `<span class="${index === 0 ? "active" : ""}">${category}</span>`).join("")}</div>
       <div class="fw-list settings-list">${items.map((item, index) => `<div class="fw-list-row${state.selectedRow === index + 1 ? " selected" : ""}"><strong>${item[0]}</strong><span class="fw-list-value">${item[1]}</span></div>`).join("")}</div>
-      ${firmwareHints(["Back", state.selectedRow === 0 ? "Reader" : "Toggle", "Up", "Down"])}
     </div>`;
   }
 
@@ -150,7 +139,7 @@
 
   function render() {
     const state = readState();
-    const maxSelectedRows = { home: 5, stats: 3, sync: 4, settings: 11 };
+    const maxSelectedRows = { home: 5, stats: 3, sync: 5, settings: 11 };
     const maxSelectedRow = maxSelectedRows[state.screen];
     if (state.selectedRow > maxSelectedRow) {
       state.selectedRow = maxSelectedRow;
