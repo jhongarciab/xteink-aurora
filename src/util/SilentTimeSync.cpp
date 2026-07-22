@@ -78,8 +78,8 @@ bool SilentTimeSync::run(const bool allowWifiAttempt) {
     return false;
   }
 
-  if (!allowWifiAttempt || SETTINGS.syncDayWifiChoice != CrossPointSettings::SYNC_DAY_WIFI_AUTO ||
-      !WIFI_STORE.loadFromFile() || WIFI_STORE.getCredentials().empty()) {
+  if (!allowWifiAttempt || !SETTINGS.autoSyncDay || !WIFI_STORE.loadFromFile() ||
+      WIFI_STORE.getCredentials().empty()) {
     return false;
   }
 

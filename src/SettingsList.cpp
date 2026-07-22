@@ -110,6 +110,7 @@ const std::vector<SettingInfo>& getSettingsList() {
 
         // --- Apps ---
         SettingInfo::Toggle(StrId::STR_DISPLAY_DAY, &CrossPointSettings::displayDay, "displayDay", StrId::STR_APPS),
+        SettingInfo::Toggle(StrId::STR_AUTO_SYNC_DAY, &CrossPointSettings::autoSyncDay, "autoSyncDay", StrId::STR_APPS),
         SettingInfo::Enum(StrId::STR_CHOOSE_WIFI, &CrossPointSettings::syncDayWifiChoice,
                           {StrId::STR_REFRESH_MODE_AUTO, StrId::STR_MANUAL}, "syncDayWifiChoice", StrId::STR_APPS),
         SettingInfo::Enum(StrId::STR_SYNC_DAY_REMINDER_EVERY, &CrossPointSettings::syncDayReminderStarts,

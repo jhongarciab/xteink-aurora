@@ -18,23 +18,21 @@ void drawHeaderTopLine(const GfxRenderer& renderer, const ThemeMetrics& metrics,
                        const std::string& dateText, const std::string& reminderText) {
   const bool showBatteryPercentage =
       SETTINGS.hideBatteryPercentage != CrossPointSettings::HIDE_BATTERY_PERCENTAGE::HIDE_ALWAYS;
-  const int batteryX = pageWidth - 12 - metrics.batteryWidth;
-  int rightEdge = batteryX - 8;
+  int reminderX = metrics.contentSidePadding + metrics.batteryWidth + 12;
 
   if (showBatteryPercentage) {
     const std::string batteryText = std::to_string(powerManager.getBatteryPercentage()) + "%";
-    rightEdge -= renderer.getTextWidth(SMALL_FONT_ID, batteryText.c_str()) + 4;
+    reminderX += renderer.getTextWidth(SMALL_FONT_ID, batteryText.c_str()) + 4;
   }
 
-  int dateX = rightEdge;
+  int dateX = pageWidth - metrics.contentSidePadding;
   if (!dateText.empty()) {
     const int dateWidth = renderer.getTextWidth(SMALL_FONT_ID, dateText.c_str());
-    dateX = std::max(metrics.contentSidePadding, rightEdge - dateWidth);
+    dateX = std::max(reminderX, pageWidth - metrics.contentSidePadding - dateWidth);
     renderer.drawText(SMALL_FONT_ID, dateX, metrics.topPadding + 5, dateText.c_str());
   }
 
   if (!reminderText.empty()) {
-    const int reminderX = metrics.contentSidePadding;
     const int maxReminderWidth = std::max(0, dateX - reminderX - 12);
     if (maxReminderWidth > 0) {
       const std::string truncated = renderer.truncatedText(SMALL_FONT_ID, reminderText.c_str(), maxReminderWidth);
@@ -44,8 +42,10 @@ void drawHeaderTopLine(const GfxRenderer& renderer, const ThemeMetrics& metrics,
 }
 
 std::string formatHeaderDateText(const uint32_t timestamp, const bool usedFallback) {
-  (void)usedFallback;
-  return TimeUtils::formatDate(timestamp, false);
+  const bool networkTimeIsCurrent =
+      !usedFallback && TimeUtils::isClockValid(timestamp) && APP_STATE.lastNetworkTimeSyncDayOrdinal != 0 &&
+      TimeUtils::getLocalDayOrdinal(timestamp) == APP_STATE.lastNetworkTimeSyncDayOrdinal;
+  return networkTimeIsCurrent ? TimeUtils::formatDateTime(timestamp, false) : TimeUtils::formatDate(timestamp, false);
 }
 }  // namespace
 

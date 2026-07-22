@@ -191,6 +191,7 @@ const std::vector<SettingInfo>& getDeviceOnlyAppSettings() {
       SettingInfo::Action(StrId::STR_SYNC_DAY, SettingAction::SyncDay),
       SettingInfo::Action(StrId::STR_TIME_ZONE, SettingAction::TimeZone),
       SettingInfo::Toggle(StrId::STR_DISPLAY_DAY, &CrossPointSettings::displayDay),
+      SettingInfo::Toggle(StrId::STR_AUTO_SYNC_DAY, &CrossPointSettings::autoSyncDay),
       SettingInfo::Enum(StrId::STR_CHOOSE_WIFI, &CrossPointSettings::syncDayWifiChoice,
                         {StrId::STR_REFRESH_MODE_AUTO, StrId::STR_MANUAL}),
       SettingInfo::Enum(StrId::STR_SYNC_DAY_REMINDER_EVERY, &CrossPointSettings::syncDayReminderStarts,

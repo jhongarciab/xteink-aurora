@@ -19,7 +19,7 @@
 #include "util/TimeZoneRegistry.h"
 
 namespace {
-constexpr int ACTION_COUNT = 5;
+constexpr int ACTION_COUNT = 6;
 constexpr int HELP_TEXT_LINE_HEIGHT = 18;
 
 void wifiOff() {
@@ -28,30 +28,6 @@ void wifiOff() {
   delay(100);
   WiFi.mode(WIFI_OFF);
   delay(100);
-}
-
-int drawWrappedHelpLine(GfxRenderer& renderer, const int left, const int top, const int width, const char* text) {
-  int currentTop = top;
-  const auto wrappedLines = renderer.wrappedText(UI_10_FONT_ID, text, width, 3);
-  for (const auto& line : wrappedLines) {
-    renderer.drawText(UI_10_FONT_ID, left, currentTop, line.c_str());
-    currentTop += HELP_TEXT_LINE_HEIGHT;
-  }
-  return currentTop;
-}
-
-int drawHowItWorksText(GfxRenderer& renderer, const int left, const int top, const int width) {
-  int currentTop = top;
-  renderer.drawText(UI_10_FONT_ID, left, currentTop, tr(STR_SYNC_DAY_INFO_TITLE), true, EpdFontFamily::BOLD);
-  currentTop += 22;
-
-  currentTop = drawWrappedHelpLine(renderer, left, currentTop, width, tr(STR_SYNC_DAY_INFO_1));
-  currentTop += 2;
-  currentTop = drawWrappedHelpLine(renderer, left, currentTop, width, tr(STR_SYNC_DAY_INFO_2));
-  currentTop += 2;
-  currentTop = drawWrappedHelpLine(renderer, left, currentTop, width, tr(STR_SYNC_DAY_INFO_3));
-
-  return currentTop;
 }
 
 std::string getObtainedDateLabel() {
@@ -83,6 +59,10 @@ std::string getWifiChoiceLabel() {
   return SETTINGS.syncDayWifiChoice == CrossPointSettings::SYNC_DAY_WIFI_MANUAL
              ? std::string(tr(STR_MANUAL))
              : std::string(tr(STR_REFRESH_MODE_AUTO));
+}
+
+std::string getAutoSyncLabel() {
+  return SETTINGS.autoSyncDay ? std::string(tr(STR_REFRESH_MODE_AUTO)) : std::string(tr(STR_MANUAL));
 }
 
 std::string getNetworkStatusLabel() {
@@ -133,10 +113,14 @@ void SyncDayActivity::loop() {
     } else if (selectedIndex == 1) {
       openManualDateSelection();
     } else if (selectedIndex == 2) {
-      SETTINGS.syncDayWifiChoice = (SETTINGS.syncDayWifiChoice + 1) % CrossPointSettings::SYNC_DAY_WIFI_CHOICE_COUNT;
+      SETTINGS.autoSyncDay = !SETTINGS.autoSyncDay;
       SETTINGS.saveToFile();
       requestUpdate();
     } else if (selectedIndex == 3) {
+      SETTINGS.syncDayWifiChoice = (SETTINGS.syncDayWifiChoice + 1) % CrossPointSettings::SYNC_DAY_WIFI_CHOICE_COUNT;
+      SETTINGS.saveToFile();
+      requestUpdate();
+    } else if (selectedIndex == 4) {
       openTimeZoneSelection();
     } else {
       SETTINGS.dateFormat = (SETTINGS.dateFormat + 1) % CrossPointSettings::DATE_FORMAT_COUNT;
@@ -182,34 +166,35 @@ void SyncDayActivity::render(RenderLock&&) {
       [](int index) {
         if (index == 0) return std::string(tr(STR_SYNC_NOW));
         if (index == 1) return std::string(tr(STR_SET_DATE));
-        if (index == 2) return std::string(tr(STR_CHOOSE_WIFI));
-        if (index == 3) return std::string(tr(STR_TIME_ZONE));
+        if (index == 2) return std::string(tr(STR_AUTO_SYNC_DAY));
+        if (index == 3) return std::string(tr(STR_CHOOSE_WIFI));
+        if (index == 4) return std::string(tr(STR_TIME_ZONE));
         return std::string(tr(STR_DATE_FORMAT));
       },
       [](int index) {
         if (index == 0) return getObtainedDateLabel();
         if (index == 1) return std::string(tr(STR_MANUAL));
-        if (index == 2) return getWifiChoiceLabel();
-        if (index == 3) return getTimeZoneLabel();
+        if (index == 2) return getAutoSyncLabel();
+        if (index == 3) return getWifiChoiceLabel();
+        if (index == 4) return getTimeZoneLabel();
         return getDateFormatLabel();
       },
       [](int index) {
         if (index == 0) return UIIcon::Wifi;
         if (index == 1) return UIIcon::Recent;
         if (index == 2) return UIIcon::Settings;
-        if (index == 3) return UIIcon::Settings;
+        if (index == 3 || index == 4) return UIIcon::Settings;
         return UIIcon::Recent;
       },
-      [](int index) { return index == 0 ? getNetworkStatusLabel() : std::string(); }, false);
+      [](int index) { return index == 0 ? getNetworkStatusLabel() : std::string(); }, false,
+      [](int index) { return index == 2 && SETTINGS.autoSyncDay; });
 
   int infoTop = listTop + listHeight + metrics.verticalSpacing;
-  const int infoWidth = pageWidth - sidePadding * 2;
   if (selectedIndex == 0) {
+    const int infoWidth = pageWidth - sidePadding * 2;
     const std::string helperText = renderer.truncatedText(UI_10_FONT_ID, getStatusMessage().c_str(), infoWidth);
     renderer.drawText(UI_10_FONT_ID, sidePadding, infoTop, helperText.c_str());
-    infoTop += HELP_TEXT_LINE_HEIGHT + 10;
   }
-  drawHowItWorksText(renderer, sidePadding, infoTop, infoWidth);
 
   const auto labels = mappedInput.mapLabels(tr(STR_BACK), tr(STR_SELECT), tr(STR_DIR_UP), tr(STR_DIR_DOWN));
   GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
