@@ -87,6 +87,7 @@ void ManualDateActivity::saveDate() {
   }
 
   APP_STATE.registerValidTimeSync(epoch);
+  APP_STATE.lastNetworkTimeSyncDayOrdinal = 0;
   APP_STATE.saveToFile();
   finish();
 }

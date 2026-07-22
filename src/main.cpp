@@ -464,7 +464,7 @@ void setup() {
   }
 
   const bool allowSilentWifiSync = !isSilentReboot && !manualSafeBoot && !skipStateLoad &&
-                                   wakeupReason == HalGPIO::WakeupReason::PowerButton;
+                                   wakeupReason != HalGPIO::WakeupReason::AfterUSBPower;
   SilentTimeSync::run(allowSilentWifiSync);
 
   if (skipReadingStatsLoad) {
