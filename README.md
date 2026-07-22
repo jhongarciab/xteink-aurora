@@ -28,6 +28,7 @@ Some of the main additions include:
 
 - full reading analytics: reading stats, heatmaps, day detail, reading profile, session history, goals, streaks, and achievements
 - Sync Day support for reliable offline day-based statistics on hardware without a trustworthy sleep RTC
+- silent Wi-Fi date/time synchronization on wake or startup when `Auto Sync Day` is enabled, using any saved network in range
 - per-book statistics tools, including reading-time correction, start-date editing, and per-book stats reset
 - StarDict dictionary support from the SD card, with selectable monolingual and translation dictionaries, per-language folders, reader word lookup, suggestions, and lookup history
 - offline Flashcards with CSV decks, multiple study modes, recents, stats, and session summaries
@@ -62,6 +63,18 @@ The philosophy of this fork is simple: keep the firmware fast, stable, and focus
 
 - [Auto Flash](https://jhongarciab.github.io/xteink-aurora/flash.html) installs the latest xAurora firmware from Chrome or Edge using Web Serial.
 - [Reading Stats Editor](https://jhongarciab.github.io/xteink-aurora/reading-stats-editor/) edits exported reading stats locally in the browser. No upload, no server.
+
+## UI preview
+
+The lightweight [UI Preview](./tools/ui-preview/) helps arrange and review firmware screens in a browser without compiling or flashing after every visual change. It includes the Lyra Carousel Home screen, Reading Stats, Sync Day, and Settings layouts for both X3 and X4 screen proportions.
+
+Start it from the repository root with:
+
+```sh
+python3 -m http.server 8080
+```
+
+Then open <http://localhost:8080/tools/ui-preview/>. The preview is a layout aid, not a firmware emulator; final font metrics, input behavior, refresh behavior, and memory use still require a firmware build and device test.
 
 ## SD card DICTIONARIES
 
@@ -282,7 +295,7 @@ That is enough to start using the core `xaurora` additions: coherent day-based a
 | `Reading Profile` | weekly reading behavior summary | [Reading analytics suite](#reading-analytics-suite) |
 | `Achievements` | console-style milestones and optional popups | [Achievements](#achievements) |
 | `Flashcards` | offline deck study with `Scheduled` and `Infinite` session modes | [Flashcards](#flashcards) |
-| `Sync Day` | manual Wi-Fi date sync and fallback-day logic | [Sync Day and date model](#sync-day-and-date-model) |
+| `Sync Day` | manual or silent Wi-Fi date/time sync, saved-network discovery, and fallback-day logic | [Sync Day and date model](#sync-day-and-date-model) |
 | `Home + Apps shortcuts` | configurable placement, visibility, ordering, and a fallback to `Lyra xAurora` for removed/unknown themes | [Home and Apps](#home-and-apps) |
 | `SD card fonts` | download, upload, or manually install extra `.cpfont` families from the SD card | [Settings](#settings) |
 | `SD firmware update` | select a `.bin` from the SD card and flash it locally from Settings | [Settings](#settings) |
@@ -334,7 +347,11 @@ The ESP32-C3 in the X4 does not provide a sleep-resilient real-time clock you ca
 
 In practice:
 
-- syncing once per day before reading is usually enough
+- enable `Auto Sync Day` to let the device make a silent Wi-Fi attempt when it starts or wakes
+- the automatic attempt checks all saved networks that are currently in range; it does not depend on the last network used
+- if no saved network is available, the device keeps its current or last valid date and continues normally
+- `Choose WiFi` controls manual sync only: `Automatic` selects a saved network, while `Manual` opens the network selector
+- the header shows the time only after a valid network synchronization for the current day; otherwise it shows the date without an untrusted time
 - day-based stats depend on having a valid day reference
 - timezone and date format are configurable globally
 
