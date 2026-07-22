@@ -12,9 +12,9 @@
 #include "util/TimeUtils.h"
 
 namespace {
-constexpr uint32_t SCAN_TIMEOUT_MS = 3000;
-constexpr uint32_t CONNECT_TIMEOUT_MS = 4500;
-constexpr uint32_t NTP_TIMEOUT_MS = 3000;
+constexpr uint32_t SCAN_TIMEOUT_MS = 6000;
+constexpr uint32_t CONNECT_TIMEOUT_MS = 8000;
+constexpr uint32_t NTP_TIMEOUT_MS = 5000;
 
 struct Candidate {
   const WifiCredential* credential = nullptr;
