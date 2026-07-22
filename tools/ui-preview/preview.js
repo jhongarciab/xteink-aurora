@@ -31,6 +31,7 @@
       folder: '<path d="M3 7h7l2 3h9v10H3z"/><path d="M3 10h18"/>',
       wifi: '<path d="M3 9c5-4 13-4 18 0"/><path d="M6 13c3-3 9-3 12 0"/><path d="M9.5 16.5c1.4-1.2 3.6-1.2 5 0"/><path d="M12 20h.01"/>',
       settings: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
+      book: '<path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v18H6.5A2.5 2.5 0 0 0 4 22z"/><path d="M4 4.5v15A2.5 2.5 0 0 1 6.5 17H20"/>',
       library: '<path d="M4 4h4v16H4zM10 4h4v16h-4zM16 5l3-1 3 15-3 1z"/>',
       apps: '<circle cx="7" cy="7" r="2"/><circle cx="17" cy="7" r="2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>'
     };
@@ -50,7 +51,7 @@
   }
 
   function renderLyraHome(state) {
-    const shortcutTypes = ["folder", "wifi", "settings", "library", "apps"];
+    const shortcutTypes = ["folder", "apps", "book"];
     const selectedShortcut = state.selectedRow - 1;
     const bookTitle = escapeHtml(state.title);
     return `<div class="lyra-home${state.selectedRow === 0 ? " carousel-selected" : ""}">
@@ -64,8 +65,8 @@
         </div>
         <div class="carousel-copy">
           <div class="carousel-dots"><i></i><i class="active"></i><i></i></div>
-          <div class="carousel-author">Ursula K. Le Guin</div>
           <div class="carousel-title">${bookTitle}</div>
+          <div class="carousel-author">Ursula K. Le Guin</div>
         </div>
       </div>
       <div class="shortcut-strip">

@@ -48,7 +48,7 @@ inline const std::array<ShortcutDefinition, 17>& getShortcutDefinitions() {
                          &CrossPointSettings::syncDayShortcut, &CrossPointSettings::syncDayShortcutOrder,
                          &CrossPointSettings::syncDayShortcutVisible},
       ShortcutDefinition{ShortcutId::Settings, StrId::STR_SETTINGS_TITLE, StrId::STR_SETTINGS_APP_DESC,
-                         UIIcon::Settings, &CrossPointSettings::settingsShortcut,
+                         UIIcon::Apps, &CrossPointSettings::settingsShortcut,
                          &CrossPointSettings::settingsShortcutOrder, &CrossPointSettings::settingsShortcutVisible},
       ShortcutDefinition{ShortcutId::ReadingStats, StrId::STR_READING_STATS, StrId::STR_READING_STATS_DESC,
                          UIIcon::Book, &CrossPointSettings::readingStatsShortcut,

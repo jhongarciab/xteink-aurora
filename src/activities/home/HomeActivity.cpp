@@ -173,6 +173,11 @@ std::vector<HomeShortcutEntry> getHomeShortcutEntries(const bool hasOpdsServers)
   entries.push_back(HomeShortcutEntry{nullptr, true});
 
   for (const auto& definition : getShortcutDefinitions()) {
+    // Sync Day is available from Settings > Apps. Keep it out of the Home
+    // carousel so date/time and automatic-sync controls have one home.
+    if (definition.id == ShortcutId::SyncDay) {
+      continue;
+    }
     if (definition.id == ShortcutId::OpdsBrowser && !hasOpdsServers) {
       continue;
     }
@@ -244,7 +249,7 @@ std::string getHomeShortcutSubtitle(const HomeShortcutEntry& entry) {
 
 UIIcon getHomeShortcutIcon(const HomeShortcutEntry& entry) {
   if (entry.isAppsHub) {
-    return UIIcon::Apps;
+    return UIIcon::Book;
   }
   return entry.definition ? entry.definition->icon : UIIcon::Folder;
 }

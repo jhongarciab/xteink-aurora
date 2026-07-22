@@ -239,17 +239,17 @@ void LyraCarouselTheme::drawRecentBookCover(GfxRenderer& renderer, Rect rect,
       dotX += kDotSize + kDotGap;
     }
 
-    const int authorY = dotsY + kDotSize + 6;
-    const std::string authorTrunc =
-        renderer.truncatedText(kTitleFontId, recentBooks[centerIdx].author.c_str(), kCenterCoverW);
-    const int authorW = renderer.getTextWidth(kTitleFontId, authorTrunc.c_str());
-    renderer.drawText(kTitleFontId, centerX + (kCenterCoverW - authorW) / 2, authorY, authorTrunc.c_str(), true);
-
-    const int titleY = authorY + renderer.getLineHeight(kTitleFontId) + 2;
+    const int titleY = dotsY + kDotSize + 6;
     const std::string titleTrunc =
         renderer.truncatedText(kTitleFontId, recentBooks[centerIdx].title.c_str(), kCenterCoverW);
     const int titleW = renderer.getTextWidth(kTitleFontId, titleTrunc.c_str());
     renderer.drawText(kTitleFontId, centerX + (kCenterCoverW - titleW) / 2, titleY, titleTrunc.c_str(), true);
+
+    const int authorY = titleY + renderer.getLineHeight(kTitleFontId) + 2;
+    const std::string authorTrunc =
+        renderer.truncatedText(kTitleFontId, recentBooks[centerIdx].author.c_str(), kCenterCoverW);
+    const int authorW = renderer.getTextWidth(kTitleFontId, authorTrunc.c_str());
+    renderer.drawText(kTitleFontId, centerX + (kCenterCoverW - authorW) / 2, authorY, authorTrunc.c_str(), true);
 
     coverBufferStored = storeCoverBuffer();
     coverRendered = coverBufferStored;
