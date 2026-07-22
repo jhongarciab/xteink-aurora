@@ -14,7 +14,7 @@
 
 #include "CrossPointState.h"
 #include "util/BookIdentity.h"
-#include "util/CprVcodexLogs.h"
+#include "util/XAuroraLogs.h"
 #include "util/TimeUtils.h"
 
 namespace {
@@ -881,7 +881,7 @@ bool ReadingStatsStore::prepareInternalBackup() const {
     internalBackupPrepared = true;
   } else {
     LOG_ERR("RST", "Failed to prepare reading stats backup");
-    CPR_VCODEX_LOG_EVENT("RST", "Failed to prepare reading stats backup");
+    XAURORA_LOG_EVENT("RST", "Failed to prepare reading stats backup");
   }
   return copied;
 }
@@ -922,7 +922,7 @@ bool ReadingStatsStore::restoreInternalBackupToMain(const char* reason) const {
       message += reason;
     }
     LOG_DBG("RST", "%s", message.c_str());
-    CPR_VCODEX_LOG_EVENT("RST", message);
+    XAURORA_LOG_EVENT("RST", message);
   }
   return restored;
 }
@@ -1091,7 +1091,7 @@ bool ReadingStatsStore::persistToFile(const char* path) const {
   if (persistenceSuspended && path != nullptr && std::strcmp(path, READING_STATS_FILE_JSON) == 0) {
     if (!skippedSaveLogged) {
       LOG_ERR("RST", "Skipping reading stats save because loading was skipped in recovery mode");
-      CPR_VCODEX_LOG_EVENT("RST", "Skipped reading stats save after recovery-mode load skip");
+      XAURORA_LOG_EVENT("RST", "Skipped reading stats save after recovery-mode load skip");
       skippedSaveLogged = true;
     }
     lastSaveMs = millis();

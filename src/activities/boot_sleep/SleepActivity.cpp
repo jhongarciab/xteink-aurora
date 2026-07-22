@@ -773,7 +773,7 @@ void SleepActivity::renderDefaultSleepScreen() const {
 
   renderer.clearScreen();
   renderer.drawIcon(Logo, logoX, logoY, logoWidth, logoHeight);
-  renderer.drawCenteredText(UI_10_FONT_ID, titleY, tr(STR_CPR_VCODEX), true, EpdFontFamily::BOLD);
+  renderer.drawCenteredText(UI_10_FONT_ID, titleY, tr(STR_XAURORA), true, EpdFontFamily::BOLD);
   renderer.drawCenteredText(SMALL_FONT_ID, subtitleY, tr(STR_SLEEPING));
 
   if (SETTINGS.sleepScreen != CrossPointSettings::SLEEP_SCREEN_MODE::LIGHT) {
@@ -959,7 +959,7 @@ void SleepActivity::renderReadingDashboardSleepScreen() const {
       ReadingStatsAnalytics::formatDurationHm(todayMs) + " / " + ReadingStatsAnalytics::formatDurationHm(goalMs);
 
   renderer.clearScreen();
-  renderer.drawText(SMALL_FONT_ID, side, 32, tr(STR_CPR_VCODEX));
+  renderer.drawText(SMALL_FONT_ID, side, 32, tr(STR_XAURORA));
   drawRightText(renderer, SMALL_FONT_ID, pageWidth - side, 32, tr(STR_SLEEPING));
   renderer.drawLine(side, 62, pageWidth - side, 62, true);
 

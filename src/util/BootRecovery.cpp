@@ -7,10 +7,10 @@
 
 #include <string>
 
-#include "CprVcodexLogs.h"
+#include "XAuroraLogs.h"
 
 namespace {
-constexpr char RECOVERY_FILE[] = "/.crosspoint/cpr-vcodex-logs/recovery.json";
+constexpr char RECOVERY_FILE[] = "/.crosspoint/xaurora-logs/recovery.json";
 
 enum RecoveryBits : uint32_t {
   SKIP_SETTINGS = 1u << 0,
@@ -72,7 +72,7 @@ uint32_t getSkipMaskForStage(const BootRecovery::BootStage stage) {
 
 void saveRecoveryState() {
   Storage.mkdir("/.crosspoint");
-  Storage.mkdir(CPR_VCODEX_LOG_DIR);
+  Storage.mkdir(XAURORA_LOG_DIR);
 
   JsonDocument doc;
   doc["skipMask"] = recoveryMask;
@@ -85,17 +85,17 @@ void saveRecoveryState() {
     Storage.remove(tempPath.c_str());
   }
   if (!Storage.writeFile(tempPath.c_str(), json)) {
-    CPR_VCODEX_LOG_EVENT("BOOT", "Failed to write recovery temp file");
+    XAURORA_LOG_EVENT("BOOT", "Failed to write recovery temp file");
     return;
   }
   if (Storage.exists(RECOVERY_FILE) && !Storage.remove(RECOVERY_FILE)) {
     Storage.remove(tempPath.c_str());
-    CPR_VCODEX_LOG_EVENT("BOOT", "Failed to replace recovery.json");
+    XAURORA_LOG_EVENT("BOOT", "Failed to replace recovery.json");
     return;
   }
   if (!Storage.rename(tempPath.c_str(), RECOVERY_FILE)) {
     Storage.remove(tempPath.c_str());
-    CPR_VCODEX_LOG_EVENT("BOOT", "Failed to finalize recovery.json");
+    XAURORA_LOG_EVENT("BOOT", "Failed to finalize recovery.json");
   }
 }
 
@@ -113,7 +113,7 @@ void loadRecoveryState() {
   JsonDocument doc;
   auto error = deserializeJson(doc, json);
   if (error) {
-    CPR_VCODEX_LOG_EVENT("BOOT", std::string("Failed to parse recovery.json: ") + error.c_str());
+    XAURORA_LOG_EVENT("BOOT", std::string("Failed to parse recovery.json: ") + error.c_str());
     return;
   }
 
@@ -131,8 +131,8 @@ void persistPanicInfo() {
   reportBody += "\n\n";
   reportBody += HalSystem::getPanicInfo(true);
   std::string outPath;
-  if (CPR_VCODEX_WRITE_REPORT("panic", reportBody, &outPath)) {
-    CPR_VCODEX_LOG_EVENT("BOOT", std::string("Saved panic report to ") + outPath);
+  if (XAURORA_WRITE_REPORT("panic", reportBody, &outPath)) {
+    XAURORA_LOG_EVENT("BOOT", std::string("Saved panic report to ") + outPath);
   }
 #endif
 }
@@ -169,7 +169,7 @@ void initialize() {
       std::string message = "Panic detected during boot stage ";
       message += getStageName(culpritStage);
       message += "; enabling recovery mode";
-      CPR_VCODEX_LOG_EVENT("BOOT", message);
+      XAURORA_LOG_EVENT("BOOT", message);
     } else {
       recoveryActive = recoveryMask != 0;
     }
@@ -185,7 +185,7 @@ void enterStage(const BootStage stage) { recordedStageRaw = static_cast<uint8_t>
 void markBootCompleted() {
   recordedStageRaw = static_cast<uint8_t>(BootStage::Completed);
   if (recoveryMask != 0 || recoveryActive) {
-    CPR_VCODEX_LOG_EVENT("BOOT", "Boot completed successfully; clearing recovery state");
+    XAURORA_LOG_EVENT("BOOT", "Boot completed successfully; clearing recovery state");
     clearRecoveryState();
   }
 }

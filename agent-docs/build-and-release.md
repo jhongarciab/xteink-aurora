@@ -35,8 +35,8 @@ python -X utf8 -m platformio run -e default -j 1
   from there. Avoid adding the version back to global `CPPDEFINES`; doing so
   makes every dev build look dirty to PlatformIO.
 - Development builds include a `.devN-<sha>` suffix.
-- Release builds are tag-driven when `VCODEX_RELEASE_TAG` or `GITHUB_REF_NAME`
-  matches `<base>.<release>-cpr-vcodex`.
+- Release builds are tag-driven when `XAURORA_RELEASE_TAG` or `GITHUB_REF_NAME`
+  matches `<base>.<release>-xaurora`.
 - Local release counters under `artifacts/` are ignored by git. Do not rely on
   them as the only source of published release truth.
 
@@ -45,7 +45,7 @@ python -X utf8 -m platformio run -e default -j 1
 Run pre-release checks before publishing:
 
 ```bash
-python scripts/pre_release_check.py --tag 1.2.0.39-cpr-vcodex
+python scripts/pre_release_check.py --tag 1.2.0.39-xaurora
 ```
 
 The check should verify tag format, release artifacts, firmware budget, and
@@ -56,10 +56,10 @@ exist and were produced intentionally.
 
 Important scripts:
 
-- `scripts/package_vcodex_bin.py`: packages firmware after PlatformIO builds.
+- `scripts/package_xaurora_bin.py`: packages firmware after PlatformIO builds.
 - `scripts/firmware_budget_report.py`: reports flash usage and budget.
 - `scripts/pre_release_check.py`: release gate.
-- `bin/build-vcodex.ps1`: Windows helper for local packaging.
+- `bin/build-xaurora.ps1`: Windows helper for local packaging.
 
 Expected release assets:
 

@@ -1,4 +1,4 @@
-#include "CprVcodexLogs.h"
+#include "XAuroraLogs.h"
 
 #include <Arduino.h>
 #include <HalStorage.h>
@@ -8,8 +8,8 @@
 #include <string>
 
 namespace {
-constexpr char LOG_DIR[] = CPR_VCODEX_LOG_DIR;
-constexpr char EVENTS_FILE[] = "/.crosspoint/cpr-vcodex-logs/boot_events.log";
+constexpr char LOG_DIR[] = XAURORA_LOG_DIR;
+constexpr char EVENTS_FILE[] = "/.crosspoint/xaurora-logs/boot_events.log";
 RTC_NOINIT_ATTR uint32_t logSequence = 0;
 
 uint32_t nextSequence() {
@@ -31,7 +31,7 @@ std::string buildReportPath(const char* prefix) {
 }
 }  // namespace
 
-namespace CprVcodexLogs {
+namespace XAuroraLogs {
 
 const char* getLogDir() { return LOG_DIR; }
 
@@ -83,4 +83,4 @@ bool writeReport(const char* prefix, const std::string& body, std::string* outPa
   return true;
 }
 
-}  // namespace CprVcodexLogs
+}  // namespace XAuroraLogs

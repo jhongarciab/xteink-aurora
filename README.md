@@ -1,13 +1,13 @@
-> **CPR-vCodex is a personal fork of [CrossPoint Reader](https://github.com/crosspoint-reader/crosspoint-reader)**, focused on improving reading consistency, long-term reading habits, and overall reader experience without sacrificing simplicity or performance.
+> **xAurora is a personal fork of [CrossPoint Reader](https://github.com/crosspoint-reader/crosspoint-reader)**, focused on improving reading consistency, long-term reading habits, and overall reader experience without sacrificing simplicity or performance.
 >
 > Instead of only tracking progress, this fork focuses on the full reading journey — consistency, habits, milestones, statistics, customization, and personal reading identity.
 >
 > The project adds optional layers such as reading streaks, detailed analytics, achievements, heatmaps, Sync Day tracking, session history, and deeper personalization, while still allowing the interface to remain clean and distraction-free if preferred.
 
-# CPR-vCodex
+# xAurora
 
 <p align="center">
-  <img src="./docs/images/500x100.png" alt="CPR-vCodex logo" width="500" />
+  <img src="./docs/images/500x100.png" alt="xAurora logo" width="500" />
   <br />
   <sub>Logo contributed by Which-Estimate4566.</sub>
 </p>
@@ -15,14 +15,14 @@
 ## Screenshots
 
 <p align="center">
-  <img src="./docs/images/screenshots.png" alt="CPR-vCodex overview" width="1000" />
+  <img src="./docs/images/screenshots.png" alt="xAurora overview" width="1000" />
 </p>
 
 ## What's different in this fork
 
 My goal with this fork was to preserve CrossPoint experience while expanding the firmware around long-term reading engagement and personalization.
 
-Unlike a complete rewrite, CPR-vCodex intentionally stays close to the upstream CrossPoint project and only carries forward additions or upstream changes that are stable and safe enough for daily reading.
+Unlike a complete rewrite, xAurora intentionally stays close to the upstream CrossPoint project and only carries forward additions or upstream changes that are stable and safe enough for daily reading.
 
 Some of the main additions include:
 
@@ -34,10 +34,10 @@ Some of the main additions include:
 - EPUB bookmarks with explicit reader-menu actions plus a global bookmarks app
 - customizable Home and Apps shortcuts, reader quick settings, reading layouts, themes, and Lyra Carousel workflow improvements
 - enhanced sleep tools, including custom image directories, cover/custom stats screens, sleep previews, cached sleep frames, and configurable clean sleep refresh
-- downloadable and manually installable SD-card fonts, including vCodex-only families such as `ChareInk`
+- downloadable and manually installable SD-card fonts, including xAurora-only families such as `ChareInk`
 - Screen Clean, SD firmware update, Auto Flash, reading stats editor, and other maintenance/workflow utilities
 - KOReader Sync, OPDS filename options, reader refresh controls, Bionic Reading, text darkness, dark mode, and other reader quality-of-life settings
-- carefully selected upstream CrossPoint improvements and fixes adapted without dropping vCodex-specific behavior
+- carefully selected upstream CrossPoint improvements and fixes adapted without dropping xAurora-specific behavior
 
 The philosophy of this fork is simple: keep the firmware fast, stable, and focused on reading, while making the device feel more rewarding and personal for people who read every day.
 
@@ -45,10 +45,10 @@ The philosophy of this fork is simple: keep the firmware fast, stable, and focus
 
 | Item | Value |
 |---|---|
-| Project | `CPR-vCodex` |
+| Project | `xAurora` |
 | Device | `Xteink X4`; `Xteink X3` compatibility reported by users, not personally tested |
-| Current release (CPR-vCodex) build | [`1.3.0.35-cpr-vcodex`](https://github.com/franssjz/cpr-vcodex/releases/tag/1.3.0.35-cpr-vcodex) |
-| Latest SD font package | [`sd-fonts-m1-b4`](https://github.com/franssjz/cpr-vcodex/releases/tag/sd-fonts-m1-b4) |
+| Published baseline inherited by xAurora | [`1.3.0.35-cpr-vcodex`](https://github.com/franssjz/cpr-vcodex/releases/tag/1.3.0.35-cpr-vcodex) |
+| Latest SD font package | [`sd-fonts-m1-b4`](https://github.com/jhongarciab/xteink-aurora/releases/tag/sd-fonts-m1-b4) |
 | Changelog | [CHANGELOG.md](./CHANGELOG.md) |
 | Current release sync | Stability release on the same selected CrossPoint Reader baseline through [`fd5b8078`](https://github.com/crosspoint-reader/crosspoint-reader/commit/fd5b8078) and `open-x4-sdk` [`198ad26`](https://github.com/crosspoint-reader/community-sdk/commit/198ad267219c25c8ab84418b806c66f1fb5216a3); larger upstream UI/config rewrites remain intentionally deferred. |
 | Current release fixes | Restores decorative EPUB chapter images that were incorrectly suppressed by accessibility-only markup. |
@@ -56,16 +56,16 @@ The philosophy of this fork is simple: keep the firmware fast, stable, and focus
 | Base firmware line | `CrossPoint Reader 1.3.0` |
 | Latest official commit reviewed | [`fd5b8078`](https://github.com/crosspoint-reader/crosspoint-reader/commit/fd5b8078) |
 | Latest official commit incorporated | Selected EPUB/rendering, cache, filesystem, image, KOReader Sync, font-upload, SDK, and navigation fixes from [`7accc607`](https://github.com/crosspoint-reader/crosspoint-reader/commit/7accc607) through [`fd5b8078`](https://github.com/crosspoint-reader/crosspoint-reader/commit/fd5b8078); larger upstream bookmark, RTL, OTA/downloader, translation-bulk, and settings rewrites remain intentionally deferred. |
-| Intentional upstream exclusions | Unsupported upstream theme variants such as `RoundedRaff` remain out of the supported vCodex theme list; other upstream UI/config changes are adapted selectively to preserve the existing X4 workflow. |
+| Intentional upstream exclusions | Unsupported upstream theme variants such as `RoundedRaff` remain out of the supported xAurora theme list; other upstream UI/config changes are adapted selectively to preserve the existing X4 workflow. |
 
 ## Web tools
 
-- [Auto Flash](https://franssjz.github.io/cpr-vcodex/flash.html) installs the latest CPR-vCodex firmware from Chrome or Edge using Web Serial.
-- [Reading Stats Editor](https://franssjz.github.io/cpr-vcodex/reading-stats-editor/) edits exported reading stats locally in the browser. No upload, no server.
+- [Auto Flash](https://jhongarciab.github.io/xteink-aurora/flash.html) installs the latest xAurora firmware from Chrome or Edge using Web Serial.
+- [Reading Stats Editor](https://jhongarciab.github.io/xteink-aurora/reading-stats-editor/) edits exported reading stats locally in the browser. No upload, no server.
 
 ## SD card DICTIONARIES
 
-`CPR-vCodex` can use StarDict-format dictionaries stored on the microSD card. Dictionary data stays on the SD card; after a dictionary is selected, the firmware creates a small `.cpridx` cache next to it so later lookups stay fast.
+`xAurora` can use StarDict-format dictionaries stored on the microSD card. Dictionary data stays on the SD card; after a dictionary is selected, the firmware creates a small `.cpridx` cache next to it so later lookups stay fast.
 
 Important: a loose `.dict` file is not enough. The dictionary must be a complete StarDict package with matching `.ifo`, `.idx`, and uncompressed `.dict` files using the same base filename.
 
@@ -79,7 +79,7 @@ SD:/
       es-es.idx
       es-es.dict
       es-es.syn        # optional synonym/headword file
-      es-es.cpridx     # generated by CPR-vCodex; do not copy manually
+      es-es.cpridx     # generated by xAurora; do not copy manually
     english-spanish/
       en-es.ifo
       en-es.idx
@@ -97,33 +97,33 @@ For every StarDict dictionary, the required files are:
 Optional files:
 
 - `<name>.syn` enables alternate headwords and synonym redirects when the dictionary provides them.
-- `<name>.cpridx` is generated by CPR-vCodex after preparing the dictionary and should not be downloaded or copied by hand.
+- `<name>.cpridx` is generated by xAurora after preparing the dictionary and should not be downloaded or copied by hand.
 *All files with the same name.
 
-Compressed `<name>.dict.dz` dictionaries are detected but are not currently supported directly. If the downloaded package contains a `.dict.dz` file, open or extract it first and copy the resulting uncompressed `.dict` file to the SD card. The valid format for CPR-vCodex is `.dict`, not compressed `.dict.dz`.
+Compressed `<name>.dict.dz` dictionaries are detected but are not currently supported directly. If the downloaded package contains a `.dict.dz` file, open or extract it first and copy the resulting uncompressed `.dict` file to the SD card. The valid format for xAurora is `.dict`, not compressed `.dict.dz`.
 
 Use on the Xteink:
 
 1. Copy the dictionary files to `dictionaries/<language>/` on the microSD card.
 2. Reinsert the card and open `Apps > Dictionary`.
 3. Choose the definition text size. `Medium` is the default.
-4. Select the dictionary to prepare and activate it. Depending on the dictionary size, the first activation can take several seconds while CPR-vCodex builds its lookup cache.
+4. Select the dictionary to prepare and activate it. Depending on the dictionary size, the first activation can take several seconds while xAurora builds its lookup cache.
 5. While reading an EPUB, open the reader menu to use `Look up word`, `Lookup history`, or `Dictionary` to change the active dictionary/configuration and return to the book.
 
 Dictionary download sources vary in quality, completeness, format, and license. Always extract the downloaded package until you have the `.ifo`, `.idx`, and `.dict` files, and check the license before redistributing a dictionary.
 
 Monolingual (Defining) dictionary:
-- [Monolingual dictionaries adapted for CPR-vCodex](https://www.mediafire.com/folder/xistn8eurgvih/xteink#7ox8nert1gl68) includes several monolingual dictionaries adapted for cpr-vcodex.
+- [Monolingual dictionaries adapted for xAurora](https://www.mediafire.com/folder/xistn8eurgvih/xteink#7ox8nert1gl68) includes several monolingual dictionaries adapted for xaurora.
 
 Bilingual (Translation) dictionary:
-- [Bilingual dictionaries adapted for CPR-vCodex](https://www.mediafire.com/folder/xistn8eurgvih/xteink#jdlxf65m3l4c3) includes several bilingual dictionaries adapted for cpr-vcodex.
+- [Bilingual dictionaries adapted for xAurora](https://www.mediafire.com/folder/xistn8eurgvih/xteink#jdlxf65m3l4c3) includes several bilingual dictionaries adapted for xaurora.
 - [WikDict StarDict downloads](https://download.wikdict.com/dictionaries/stardict/) includes translation dictionaries such as German-English and English-German, depending on the published package. Includes several StarDict packages. Extract packages until you have matching `.ifo`, `.idx`, and uncompressed `.dict` files.
 
 If you know reliable public dictionary links for more languages, please contact the project or open an issue/discussion so this list can be updated.
 
 ## SD card fonts
 
-`CPR-vCodex` supports extra `.cpfont` families stored on the microSD card. The built-in reader fonts still work as usual, and downloaded SD fonts appear in `Settings > Reader > Font Family` after the firmware discovers them.
+`xAurora` supports extra `.cpfont` families stored on the microSD card. The built-in reader fonts still work as usual, and downloaded SD fonts appear in `Settings > Reader > Font Family` after the firmware discovers them.
 
 SD-card font rendering keeps a fast per-glyph advance cache when it is complete, and falls back to direct glyph measurement when an external font cache is missing an entry. Browser File Transfer downloads also preserve the advertised response size so downloaded files do not fail with content-length mismatch errors.
 
@@ -134,14 +134,14 @@ Device download:
 3. Select a family and download it.
 4. Return to `Reader Font Family` and choose the newly installed font.
 
-Manual install from GitHub is faster when Wi-Fi on the device is slow. The CPR-vCodex package contains only
-vCodex-only additions; use the CrossPoint source/package for common families:
+Manual install from GitHub is faster when Wi-Fi on the device is slow. The xAurora package contains only
+xAurora-only additions; use the CrossPoint source/package for common families:
 
-1. Download [`all-fonts.zip`](https://github.com/franssjz/cpr-vcodex/releases/download/sd-fonts-m1-b4/all-fonts.zip) from the latest CPR-vCodex SD font package.
+1. Download [`all-fonts.zip`](https://github.com/jhongarciab/xteink-aurora/releases/download/sd-fonts-m1-b4/all-fonts.zip) from the latest xAurora SD font package.
 2. Extract it into the root of the microSD card. The archive creates `fonts/<Family>/*.cpfont`.
 3. Reinsert the card, restart the device, and select the font under `Settings > Reader > Font Family`.
 
-Manual single-family install also works. Download the four files for a family from [`sd-fonts-m1-b4`](https://github.com/franssjz/cpr-vcodex/releases/tag/sd-fonts-m1-b4), create `fonts/<Family>/` on the microSD card, and copy the matching `Family_12.cpfont`, `Family_14.cpfont`, `Family_16.cpfont`, and `Family_18.cpfont` files there.
+Manual single-family install also works. Download the four files for a family from [`sd-fonts-m1-b4`](https://github.com/jhongarciab/xteink-aurora/releases/tag/sd-fonts-m1-b4), create `fonts/<Family>/` on the microSD card, and copy the matching `Family_12.cpfont`, `Family_14.cpfont`, `Family_16.cpfont`, and `Family_18.cpfont` files there.
 
 Recommended microSD layout:
 
@@ -183,11 +183,11 @@ front,back
 Sample deck ready to copy to the SD card:
 - [flashcards_sample.csv](./flashcards_sample.csv)
 
-`CPR-vCodex` is a reading-focused firmware fork for the **Xteink X4**, built on top of the stable **CrossPoint Reader** baseline and extended with analytics, reader utilities, branding cleanup, extra UI features, and carefully selected upstream carry-forwards.
+`xAurora` is a reading-focused firmware fork for the **Xteink X4**, built on top of the stable **CrossPoint Reader** baseline and extended with analytics, reader utilities, branding cleanup, extra UI features, and carefully selected upstream carry-forwards.
 
-The official `crosspoint-reader` project is treated as the stable reference. `vcodex` only carries forward upstream work when it is useful on the X4 and safe enough to keep the reader fast and reliable.
+The official `crosspoint-reader` project is treated as the stable reference. `xaurora` only carries forward upstream work when it is useful on the X4 and safe enough to keep the reader fast and reliable.
 
-There may be some **involuntary or incidental X3 compatibility** because parts of the upstream codebase still carry X3-aware paths. `CPR-vCodex` now also includes an **experimental X3-only tilt page-turn option** for devices with the QMI8658 IMU, but it is hidden when the sensor is not detected and remains off by default. The firmware is still developed and validated on **X4**, and I do **not** currently have an **X3** device available to test or confirm that compatibility.
+There may be some **involuntary or incidental X3 compatibility** because parts of the upstream codebase still carry X3-aware paths. `xAurora` now also includes an **experimental X3-only tilt page-turn option** for devices with the QMI8658 IMU, but it is hidden when the sensor is not detected and remains off by default. The firmware is still developed and validated on **X4**, and I do **not** currently have an **X3** device available to test or confirm that compatibility.
 
 This project is **not affiliated with Xteink**.
 
@@ -200,7 +200,7 @@ This project is **not affiliated with Xteink**.
 - `Sync Day` for coherent day-based stats on hardware without a trustworthy sleep RTC
 - `Lyra Carousel` Home theme, originally created by [zgredex](https://github.com/zgredex), adapted to this fork by [erickosanchezj](https://github.com/erickosanchezj), limited to 3 books for smoother X4 navigation, with a sliding bottom shortcut row so every configured Home action remains reachable
 - experimental X3-only `Tilt Page Turn`, hidden unless the QMI8658 IMU is detected and disabled by default
-- downloadable SD-card fonts from CrossPoint plus vCodex-only families such as `ChareInk`
+- downloadable SD-card fonts from CrossPoint plus xAurora-only families such as `ChareInk`
 - SD-card firmware update from Settings for local `.bin` flashing without a browser
 - configurable long-press side-button behavior: `Off`, `Chapter skip`, or `Orientation change`
 - EPUB bookmarks plus a global bookmarks app
@@ -216,7 +216,7 @@ This project is **not affiliated with Xteink**.
 
 ## Languages
 
-`CPR-vCodex` currently ships with **23 UI languages**:
+`xAurora` currently ships with **23 UI languages**:
 
 - English
 - Spanish
@@ -248,7 +248,7 @@ The translation set is maintained from `english.yaml` as the source of truth. Cu
 
 For most users, this is the easiest way to install the firmware:
 
-1. Download the latest `*-cpr-vcodex.bin` release file.
+1. Download the latest `*-xaurora.bin` release file.
 2. Turn on and unlock your Xteink X4.
 3. Open [xteink.dve.al](https://xteink.dve.al/).
 4. In `OTA fast flash controls`, select the firmware file.
@@ -261,7 +261,7 @@ To return to the original CrossPoint Reader later, repeat the same process with 
 
 ## 5-minute start
 
-If you just flashed `CPR-vCodex` and want the main value quickly:
+If you just flashed `xAurora` and want the main value quickly:
 
 1. Open `Home > Sync Day`
 2. Connect to Wi-Fi and sync the date
@@ -269,7 +269,7 @@ If you just flashed `CPR-vCodex` and want the main value quickly:
 4. Open `Apps > Reading Stats`
 5. Open `Apps > Reading Heatmap`
 
-That is enough to start using the core `vcodex` additions: coherent day-based analytics, better stats visibility, and improved app-level reading tools.
+That is enough to start using the core `xaurora` additions: coherent day-based analytics, better stats visibility, and improved app-level reading tools.
 
 ## What this fork adds
 
@@ -283,7 +283,7 @@ That is enough to start using the core `vcodex` additions: coherent day-based an
 | `Achievements` | console-style milestones and optional popups | [Achievements](#achievements) |
 | `Flashcards` | offline deck study with `Scheduled` and `Infinite` session modes | [Flashcards](#flashcards) |
 | `Sync Day` | manual Wi-Fi date sync and fallback-day logic | [Sync Day and date model](#sync-day-and-date-model) |
-| `Home + Apps shortcuts` | configurable placement, visibility, ordering, and a fallback to `Lyra vCodex` for removed/unknown themes | [Home and Apps](#home-and-apps) |
+| `Home + Apps shortcuts` | configurable placement, visibility, ordering, and a fallback to `Lyra xAurora` for removed/unknown themes | [Home and Apps](#home-and-apps) |
 | `SD card fonts` | download, upload, or manually install extra `.cpfont` families from the SD card | [Settings](#settings) |
 | `SD firmware update` | select a `.bin` from the SD card and flash it locally from Settings | [Settings](#settings) |
 | `Long-press button behavior` | choose `Off`, `Chapter skip`, or `Orientation change` for reader side-button holds | [Settings](#settings) |
@@ -312,7 +312,7 @@ Notable launcher behavior:
 - stats-related shortcuts show useful live metadata
 - `Apps` paginates long lists and supports page-jump navigation
 - `Lyra Carousel` is available as an optional cover-focused Home theme and is limited to 3 books for smoother X4 navigation; its bottom shortcut row shows five icons at a time but scrolls laterally with selection so longer Home shortcut lists remain reachable
-  It was originally created by [zgredex](https://github.com/zgredex) and adapted to CPR-vCodex by [erickosanchezj](https://github.com/erickosanchezj).
+  It was originally created by [zgredex](https://github.com/zgredex) and adapted to xAurora by [erickosanchezj](https://github.com/erickosanchezj).
 
 Management lives in:
 
@@ -323,7 +323,7 @@ Management lives in:
 
 ## Sync Day and date model
 
-This part matters, because several `vcodex` features depend on day-level data.
+This part matters, because several `xaurora` features depend on day-level data.
 
 The ESP32-C3 in the X4 does not provide a sleep-resilient real-time clock you can trust after every sleep cycle. So the fork uses a practical model:
 
@@ -525,14 +525,14 @@ Useful reader/display additions include:
 | Achievements | `Enable achievements`, `Achievement popups`, `Reset achievements`, `Sync with prev. stats` |
 | Navigation | `Location Home and Apps`, `Visibility Home and Apps`, `Order Home shortcuts`, `Order Apps shortcuts` |
 
-`Text Darkness` is a feature idea seen in the `crosspet` fork and adapted here for `vcodex`.
+`Text Darkness` is a feature idea seen in the `crosspet` fork and adapted here for `xaurora`.
 
 Font notes:
 
 - `Bookerly` and `Noto Sans` have full regular/bold/italic coverage in the compiled sizes
 - `Lexend` is available as an extra reader family
 - `Lexend` italic and bold-italic still use safe fallbacks rather than separate real italic assets
-- `Manage Fonts` downloads common SD-card font families from CrossPoint and vCodex-only additions from CPR-vCodex release assets, currently `ChareInk`
+- `Manage Fonts` downloads common SD-card font families from CrossPoint and xAurora-only additions from xAurora release assets, currently `ChareInk`
 
 ## What requires Sync Day
 
@@ -555,7 +555,7 @@ Recommended rule:
 
 ## Data persistence
 
-`CPR-vCodex` keeps storage compatibility as a first priority.
+`xAurora` keeps storage compatibility as a first priority.
 
 It does **not** use a database. User state is persisted mainly under `/.crosspoint/`.
 
@@ -577,8 +577,8 @@ Each packaged dev build now keeps the base firmware line and the local flash ide
 Practical values to look at:
 
 - base firmware line: `CrossPoint Reader 1.3.0`
-- current release build style: `1.3.0.35-cpr-vcodex`
-- packaged artifact style: `artifacts/<version>-cpr-vcodex.bin`
+- current release build style: `1.3.0.35-xaurora`
+- packaged artifact style: `artifacts/<version>-xaurora.bin`
 
 The incremental `.bNNNN` suffix exists specifically to help distinguish newer flashes from older ones on real hardware.
 
@@ -603,7 +603,7 @@ Possible note about X3:
 
 - the codebase may still retain some upstream X3-aware behavior
 - the X3-only `Tilt Page Turn` setting is experimental, off by default, and hidden unless the QMI8658 IMU is detected
-- `CPR-vCodex` is not validated on X3 hardware
+- `xAurora` is not validated on X3 hardware
 - no X3 device is currently available for testing
 
 ### Build
@@ -611,7 +611,7 @@ Possible note about X3:
 Use the project build wrapper:
 
 ```powershell
-.\bin\build-vcodex.ps1
+.\bin\build-xaurora.ps1
 ```
 
 The wrapper forces UTF-8 Python/console output for PlatformIO on Windows and
@@ -619,38 +619,38 @@ uses one build job by default for more repeatable local diagnostics. You can
 still pass another environment or job count explicitly:
 
 ```powershell
-.\bin\build-vcodex.ps1 -Environment gh_release_rc -Jobs 2
+.\bin\build-xaurora.ps1 -Environment gh_release_rc -Jobs 2
 ```
 
 To verify the `gh_release` environment locally without advancing the release
 counter or rewriting this README:
 
 ```powershell
-$env:VCODEX_RELEASE_DRY_RUN = "1"
-.\bin\build-vcodex.ps1 -Environment gh_release
-Remove-Item Env:\VCODEX_RELEASE_DRY_RUN
+$env:XAURORA_RELEASE_DRY_RUN = "1"
+.\bin\build-xaurora.ps1 -Environment gh_release
+Remove-Item Env:\XAURORA_RELEASE_DRY_RUN
 ```
 
 This generates a packaged firmware artifact under:
 
 ```text
-artifacts/<version>-cpr-vcodex.bin
+artifacts/<version>-xaurora.bin
 ```
 
 Versioning rules:
 
-- release builds: `1.3.0.<release>-cpr-vcodex.bin`
-- dev builds: `1.3.0.<release>.dev<build>-cpr-vcodex.bin`
+- release builds: `1.3.0.<release>-xaurora.bin`
+- dev builds: `1.3.0.<release>.dev<build>-xaurora.bin`
 
 Release publishing:
 
 - before tagging, run:
 
 ```powershell
-python scripts/pre_release_check.py --tag 1.3.0.35-cpr-vcodex
+python scripts/pre_release_check.py --tag 1.3.0.35-xaurora
 ```
 
-- push a stable tag named like `1.3.0.35-cpr-vcodex`
+- push a stable tag named like `1.3.0.35-xaurora`
 - the release workflow builds `gh_release`, validates that the packaged artifact
   name matches the tag, and attaches only the flashable `<tag>.bin` to the GitHub Release
 - tagged CI release builds derive the firmware release number from the tag, not
@@ -665,9 +665,9 @@ Huge credit goes to:
 - the **CrossPoint Reader** project for the upstream base
 - the Xteink X4 community around the firmware ecosystem
 - [zgredex](https://github.com/zgredex) for the original `Lyra Carousel` Home theme
-- [erickosanchezj](https://github.com/erickosanchezj) for adapting `Lyra Carousel` to CPR-vCodex
+- [erickosanchezj](https://github.com/erickosanchezj) for adapting `Lyra Carousel` to xAurora
 - Which-Estimate4566 for the logo artwork used in the docs
 
 ---
 
-CPR-vCodex is **not affiliated with Xteink or any manufacturer of the X4 hardware**.
+xAurora is **not affiliated with Xteink or any manufacturer of the X4 hardware**.

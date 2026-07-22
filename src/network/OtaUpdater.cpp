@@ -15,14 +15,14 @@
 #include "version.h"
 
 namespace {
-constexpr char firmwareManifestUrl[] = "https://franssjz.github.io/cpr-vcodex/firmware/manifest.json";
-constexpr char latestReleaseUrl[] = "https://api.github.com/repos/franssjz/cpr-vcodex/releases/latest";
+constexpr char firmwareManifestUrl[] = "https://jhongarciab.github.io/xteink-aurora/firmware/manifest.json";
+constexpr char latestReleaseUrl[] = "https://api.github.com/repos/jhongarciab/xteink-aurora/releases/latest";
 constexpr char otaCachePath[] = "/.crosspoint/ota-update.bin";
 
 /*
  * When esp_crt_bundle.h is included here, Arduino's include path can resolve
  * the wrong header. Keep the upstream streaming OTA implementation but retain
- * the explicit declaration that already worked in CPR-vCodex.
+ * the explicit declaration that already worked in xAurora.
  */
 extern "C" {
 extern esp_err_t esp_crt_bundle_attach(void* conf);
@@ -36,8 +36,8 @@ struct ParsedVersion {
 };
 
 const char* currentVersionString() {
-#ifdef VCODEX_VERSION
-  return VCODEX_VERSION;
+#ifdef XAURORA_VERSION
+  return XAURORA_VERSION;
 #else
   return CROSSPOINT_VERSION;
 #endif

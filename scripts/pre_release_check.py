@@ -47,9 +47,9 @@ def get_base_version(project_dir: Path) -> str:
 
 
 def parse_release_tag(tag: str, base_version: str) -> int:
-    match = re.fullmatch(rf"{re.escape(base_version)}\.(\d+)-cpr-vcodex", tag)
+    match = re.fullmatch(rf"{re.escape(base_version)}\.(\d+)-xaurora", tag)
     if not match:
-        fail(f"Tag must match {base_version}.<release>-cpr-vcodex, got {tag!r}")
+        fail(f"Tag must match {base_version}.<release>-xaurora, got {tag!r}")
     return int(match.group(1))
 
 
@@ -86,8 +86,8 @@ def build_release(project_dir: Path, tag: str, jobs: int) -> str:
     env = {
         "PYTHONIOENCODING": "utf-8",
         "PYTHONUTF8": "1",
-        "VCODEX_RELEASE_DRY_RUN": "1",
-        "VCODEX_RELEASE_TAG": tag,
+        "XAURORA_RELEASE_DRY_RUN": "1",
+        "XAURORA_RELEASE_TAG": tag,
     }
     cmd = ["python", "-X", "utf8", "-m", "platformio", "run", "-e", "gh_release", "-j", str(jobs)]
     print(f"[run] {' '.join(cmd)}")
@@ -185,8 +185,8 @@ def validate_autoflash_manifest(project_dir: Path) -> None:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Validate CPR-vCodex release readiness before pushing a stable tag.")
-    parser.add_argument("--tag", required=True, help="Candidate stable tag, e.g. 1.2.0.39-cpr-vcodex")
+    parser = argparse.ArgumentParser(description="Validate xAurora release readiness before pushing a stable tag.")
+    parser.add_argument("--tag", required=True, help="Candidate stable tag, e.g. 1.2.0.39-xaurora")
     parser.add_argument("--jobs", type=int, default=1, help="PlatformIO build jobs (default: 1)")
     parser.add_argument("--flash-budget-percent", type=float, default=97.5)
     parser.add_argument("--skip-build", action="store_true", help="Validate existing artifacts without rebuilding")

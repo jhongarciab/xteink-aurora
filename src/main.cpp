@@ -37,7 +37,7 @@
 #include "fontIds.h"
 #include "util/BootRecovery.h"
 #include "util/ButtonNavigator.h"
-#include "util/CprVcodexLogs.h"
+#include "util/XAuroraLogs.h"
 #include "util/ScreenshotUtil.h"
 #include "util/SilentTimeSync.h"
 
@@ -379,7 +379,7 @@ void setup() {
   HalSystem::checkPanic();
   BootRecovery::initialize();
 
-  const auto logSkip = [](const char* message) { CPR_VCODEX_LOG_EVENT("BOOT", message); };
+  const auto logSkip = [](const char* message) { XAURORA_LOG_EVENT("BOOT", message); };
 
   if (BootRecovery::shouldSkipSettings()) {
     logSkip("Skipping settings load due to recovery mode");
@@ -438,7 +438,7 @@ void setup() {
   gpio.update();
   const bool manualSafeBoot = gpio.isPressed(HalGPIO::BTN_BACK);
   if (manualSafeBoot) {
-    CPR_VCODEX_LOG_EVENT("BOOT", "Manual safe boot requested by holding Back during boot");
+    XAURORA_LOG_EVENT("BOOT", "Manual safe boot requested by holding Back during boot");
   }
 
   BootRecovery::enterStage(BootRecovery::BootStage::DisplayAndFonts);

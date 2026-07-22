@@ -11,7 +11,7 @@ Import("env")
 README_PATH = "README.md"
 BUILD_VERSION_JSON_PATH = "artifacts/build-version.json"
 RELEASE_COUNTER_FILE_TEMPLATE = ".release-counter-{base}.txt"
-RELEASE_DRY_RUN_ENV = "VCODEX_RELEASE_DRY_RUN"
+RELEASE_DRY_RUN_ENV = "XAURORA_RELEASE_DRY_RUN"
 
 
 def load_build_metadata(project_dir: Path) -> tuple[str, str, int | None]:
@@ -62,9 +62,9 @@ def update_readme_release_version(project_dir: Path, artifact_name: str) -> None
 
     readme_text = readme_path.read_text(encoding="utf-8")
     release_name = artifact_name[:-4]
-    release_url = f"https://github.com/franssjz/cpr-vcodex/releases/tag/{release_name}"
+    release_url = f"https://github.com/jhongarciab/xteink-aurora/releases/tag/{release_name}"
     updated_text, replacements = re.subn(
-        r"(\| Current release \(CPR-vCodex\) build \| \[`)([^\]]+)(`\]\()([^)]+)(\) \|)",
+        r"(\| Current release \(xAurora\) build \| \[`)([^\]]+)(`\]\()([^)]+)(\) \|)",
         rf"\g<1>{release_name}\g<3>{release_url}\g<5>",
         readme_text,
         count=1,
@@ -92,14 +92,14 @@ def persist_release_counter(project_dir: Path, base_version: str, build_seq: int
     print(f"Advanced release counter to {build_seq} ({counter_path})")
 
 
-def package_vcodex_bin(source, target, env):
+def package_xaurora_bin(source, target, env):
     build_dir = Path(env.subst("$BUILD_DIR"))
     progname = env.subst("$PROGNAME")
     project_dir = Path(env.subst("$PROJECT_DIR"))
 
     firmware_path = build_dir / f"{progname}.bin"
     if not firmware_path.exists():
-        print(f"vcodex packaging skipped: missing {firmware_path}")
+        print(f"xaurora packaging skipped: missing {firmware_path}")
         return
 
     version, base_version, build_seq = load_build_metadata(project_dir)
@@ -108,7 +108,7 @@ def package_vcodex_bin(source, target, env):
     output_dir = project_dir / "artifacts"
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    artifact_name = f"{safe_version}-cpr-vcodex.bin"
+    artifact_name = f"{safe_version}-xaurora.bin"
     artifact_path = output_dir / artifact_name
     shutil.copy2(firmware_path, artifact_path)
 
@@ -123,7 +123,7 @@ def package_vcodex_bin(source, target, env):
     }
     if build_seq is not None:
         metadata["buildSequence"] = build_seq
-    metadata_path = output_dir / f"{safe_version}-cpr-vcodex.json"
+    metadata_path = output_dir / f"{safe_version}-xaurora.json"
     metadata_path.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
 
     if env.subst("$PIOENV") == "gh_release" and os.environ.get(RELEASE_DRY_RUN_ENV) == "1":
@@ -132,8 +132,8 @@ def package_vcodex_bin(source, target, env):
         persist_release_counter(project_dir, base_version, build_seq)
         update_readme_release_version(project_dir, artifact_name)
 
-    print(f"Packaged vcodex artifact: {artifact_path}")
-    print(f"Wrote vcodex metadata: {metadata_path}")
+    print(f"Packaged xaurora artifact: {artifact_path}")
+    print(f"Wrote xaurora metadata: {metadata_path}")
 
 
-env.AddPostAction("$BUILD_DIR/${PROGNAME}.bin", package_vcodex_bin)
+env.AddPostAction("$BUILD_DIR/${PROGNAME}.bin", package_xaurora_bin)

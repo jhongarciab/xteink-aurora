@@ -21,7 +21,7 @@
 #include "SettingsList.h"
 #include "WifiCredentialStore.h"
 #include "util/BookIdentity.h"
-#include "util/CprVcodexLogs.h"
+#include "util/XAuroraLogs.h"
 #include "util/ShortcutRegistry.h"
 #include "util/TimeZoneRegistry.h"
 
@@ -69,7 +69,7 @@ bool saveJsonDocumentToFile(const char* moduleName, const char* path, const Json
 
   if (targetPath.empty()) {
     LOG_ERR(moduleName, "Missing JSON path for write");
-    CPR_VCODEX_LOG_EVENT(moduleName, "Missing JSON path for write");
+    XAURORA_LOG_EVENT(moduleName, "Missing JSON path for write");
     return false;
   }
 
@@ -80,7 +80,7 @@ bool saveJsonDocumentToFile(const char* moduleName, const char* path, const Json
   HalFile file;
   if (!Storage.openFileForWrite(moduleName, tempPath.c_str(), file)) {
     LOG_ERR(moduleName, "Could not open JSON file for write: %s", tempPath.c_str());
-    CPR_VCODEX_LOG_EVENT(moduleName, std::string("Could not open JSON temp file for write: ") + tempPath);
+    XAURORA_LOG_EVENT(moduleName, std::string("Could not open JSON temp file for write: ") + tempPath);
     return false;
   }
 
@@ -89,21 +89,21 @@ bool saveJsonDocumentToFile(const char* moduleName, const char* path, const Json
   file.close();
   if (written == 0) {
     Storage.remove(tempPath.c_str());
-    CPR_VCODEX_LOG_EVENT(moduleName, std::string("serializeJson wrote 0 bytes for ") + targetPath);
+    XAURORA_LOG_EVENT(moduleName, std::string("serializeJson wrote 0 bytes for ") + targetPath);
     return false;
   }
 
   if (Storage.exists(targetPath.c_str()) && !Storage.remove(targetPath.c_str())) {
     Storage.remove(tempPath.c_str());
     LOG_ERR(moduleName, "Could not remove JSON file before replace: %s", targetPath.c_str());
-    CPR_VCODEX_LOG_EVENT(moduleName, std::string("Could not remove JSON file before replace: ") + targetPath);
+    XAURORA_LOG_EVENT(moduleName, std::string("Could not remove JSON file before replace: ") + targetPath);
     return false;
   }
 
   if (!Storage.rename(tempPath.c_str(), targetPath.c_str())) {
     Storage.remove(tempPath.c_str());
     LOG_ERR(moduleName, "Could not rename JSON temp file to final path: %s", targetPath.c_str());
-    CPR_VCODEX_LOG_EVENT(moduleName, std::string("Could not rename JSON temp file to final path: ") + targetPath);
+    XAURORA_LOG_EVENT(moduleName, std::string("Could not rename JSON temp file to final path: ") + targetPath);
     return false;
   }
 
@@ -115,7 +115,7 @@ bool loadJsonDocumentFromFile(const char* moduleName, const char* path, JsonDocu
   if (!Storage.openFileForRead(moduleName, path, file)) {
     LOG_ERR(moduleName, "Could not open JSON file for read: %s", path);
     if (Storage.exists(path)) {
-      CPR_VCODEX_LOG_EVENT(moduleName, std::string("Could not open JSON file for read: ") + path);
+      XAURORA_LOG_EVENT(moduleName, std::string("Could not open JSON file for read: ") + path);
     }
     return false;
   }
@@ -129,8 +129,8 @@ bool loadJsonDocumentFromFile(const char* moduleName, const char* path, JsonDocu
     const std::string reportBody =
         std::string("File: ") + path + "\nModule: " + moduleName + "\nError: " + error.c_str() + "\n";
     std::string outPath;
-    if (CPR_VCODEX_WRITE_REPORT("json_error", reportBody, &outPath)) {
-      CPR_VCODEX_LOG_EVENT(moduleName, std::string("Saved JSON parse error report to ") + outPath);
+    if (XAURORA_WRITE_REPORT("json_error", reportBody, &outPath)) {
+      XAURORA_LOG_EVENT(moduleName, std::string("Saved JSON parse error report to ") + outPath);
     }
 #endif
     return false;
@@ -149,8 +149,8 @@ uint8_t migrateStoredUiTheme(const uint8_t rawUiTheme, const uint8_t schemaVersi
 
   // Legacy/theme-consolidation migration:
   // - 0 (Classic) -> Lyra
-  // - 2/3 (Extended/Custom) -> Lyra vCodex
-  // - 1 is ambiguous: in the current 2-theme schema it already means Lyra vCodex,
+  // - 2/3 (Extended/Custom) -> Lyra xAurora
+  // - 1 is ambiguous: in the current 2-theme schema it already means Lyra xAurora,
   //   while in older schemas it meant Lyra. Prefer preserving the newer stored value.
   uint8_t migratedTheme = currentDefault;
   switch (rawUiTheme) {
@@ -634,7 +634,7 @@ bool JsonSettingsIO::loadState(CrossPointState& s, const char* json) {
   auto error = deserializeJson(doc, json);
   if (error) {
     LOG_ERR("CPS", "JSON parse error: %s", error.c_str());
-    CPR_VCODEX_LOG_EVENT("CPS", std::string("Settings JSON parse error: ") + error.c_str());
+    XAURORA_LOG_EVENT("CPS", std::string("Settings JSON parse error: ") + error.c_str());
     return false;
   }
 
@@ -855,7 +855,7 @@ bool JsonSettingsIO::loadSettings(CrossPointSettings& s, const char* json, bool*
   auto error = deserializeJson(doc, json);
   if (error) {
     LOG_ERR("CPS", "JSON parse error: %s", error.c_str());
-    CPR_VCODEX_LOG_EVENT("CPS", std::string("State JSON parse error: ") + error.c_str());
+    XAURORA_LOG_EVENT("CPS", std::string("State JSON parse error: ") + error.c_str());
     return false;
   }
 
@@ -1112,7 +1112,7 @@ bool JsonSettingsIO::loadKOReader(KOReaderCredentialStore& store, const char* js
   auto error = deserializeJson(doc, json);
   if (error) {
     LOG_ERR("KRS", "JSON parse error: %s", error.c_str());
-    CPR_VCODEX_LOG_EVENT("KRS", std::string("KOReader JSON parse error: ") + error.c_str());
+    XAURORA_LOG_EVENT("KRS", std::string("KOReader JSON parse error: ") + error.c_str());
     return false;
   }
 
@@ -1153,7 +1153,7 @@ bool JsonSettingsIO::loadWifi(WifiCredentialStore& store, const char* json, bool
   auto error = deserializeJson(doc, json);
   if (error) {
     LOG_ERR("WCS", "JSON parse error: %s", error.c_str());
-    CPR_VCODEX_LOG_EVENT("WCS", std::string("WiFi JSON parse error: ") + error.c_str());
+    XAURORA_LOG_EVENT("WCS", std::string("WiFi JSON parse error: ") + error.c_str());
     return false;
   }
 
@@ -1201,7 +1201,7 @@ bool JsonSettingsIO::loadRecentBooks(RecentBooksStore& store, const char* json) 
   auto error = deserializeJson(doc, json);
   if (error) {
     LOG_ERR("RBS", "JSON parse error: %s", error.c_str());
-    CPR_VCODEX_LOG_EVENT("RBS", std::string("Recent books JSON parse error: ") + error.c_str());
+    XAURORA_LOG_EVENT("RBS", std::string("Recent books JSON parse error: ") + error.c_str());
     return false;
   }
 
@@ -1250,7 +1250,7 @@ bool JsonSettingsIO::loadFavorites(FavoritesStore& store, const char* json) {
   auto error = deserializeJson(doc, json);
   if (error) {
     LOG_ERR("FAV", "JSON parse error: %s", error.c_str());
-    CPR_VCODEX_LOG_EVENT("FAV", std::string("Favorites JSON parse error: ") + error.c_str());
+    XAURORA_LOG_EVENT("FAV", std::string("Favorites JSON parse error: ") + error.c_str());
     return false;
   }
 
@@ -1343,7 +1343,7 @@ bool JsonSettingsIO::loadReadingStats(ReadingStatsStore& store, const char* json
   auto error = deserializeJson(doc, json);
   if (error) {
     LOG_ERR("RST", "JSON parse error: %s", error.c_str());
-    CPR_VCODEX_LOG_EVENT("RST", std::string("Reading stats JSON parse error: ") + error.c_str());
+    XAURORA_LOG_EVENT("RST", std::string("Reading stats JSON parse error: ") + error.c_str());
     return false;
   }
 
@@ -1448,12 +1448,12 @@ bool JsonSettingsIO::loadReadingStatsFromFile(ReadingStatsStore& store, const ch
   }
   const String json = Storage.readFile(path);
   if (json.isEmpty()) {
-    CPR_VCODEX_LOG_EVENT("RST", std::string("Reading stats file empty or unreadable: ") + path);
+    XAURORA_LOG_EVENT("RST", std::string("Reading stats file empty or unreadable: ") + path);
     return false;
   }
   const bool loaded = loadReadingStats(store, json.c_str());
   if (!loaded) {
-    CPR_VCODEX_LOG_EVENT("RST", std::string("Failed to load reading stats from ") + path);
+    XAURORA_LOG_EVENT("RST", std::string("Failed to load reading stats from ") + path);
   }
   return loaded;
 }
@@ -1499,7 +1499,7 @@ bool JsonSettingsIO::loadAchievements(AchievementsStore& store, const char* json
   auto error = deserializeJson(doc, json);
   if (error) {
     LOG_ERR("ACH", "JSON parse error: %s", error.c_str());
-    CPR_VCODEX_LOG_EVENT("ACH", std::string("Achievements JSON parse error: ") + error.c_str());
+    XAURORA_LOG_EVENT("ACH", std::string("Achievements JSON parse error: ") + error.c_str());
     return false;
   }
 
@@ -1573,12 +1573,12 @@ bool JsonSettingsIO::loadAchievementsFromFile(AchievementsStore& store, const ch
   }
   const String json = Storage.readFile(path);
   if (json.isEmpty()) {
-    CPR_VCODEX_LOG_EVENT("ACH", std::string("Achievements file empty or unreadable: ") + path);
+    XAURORA_LOG_EVENT("ACH", std::string("Achievements file empty or unreadable: ") + path);
     return false;
   }
   const bool loaded = loadAchievements(store, json.c_str());
   if (!loaded) {
-    CPR_VCODEX_LOG_EVENT("ACH", std::string("Failed to load achievements from ") + path);
+    XAURORA_LOG_EVENT("ACH", std::string("Failed to load achievements from ") + path);
   }
   return loaded;
 }

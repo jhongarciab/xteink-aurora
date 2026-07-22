@@ -718,15 +718,15 @@ void testFirmwareBinExactMatch() {
   PASS();
 }
 
-void testVcodexTagNamedAsset() {
-  printf("testVcodexTagNamedAsset...\n");
+void testXAuroraTagNamedAsset() {
+  printf("testXAuroraTagNamedAsset...\n");
 
   const char* json = R"({
-      "tag_name": "1.2.0.39-cpr-vcodex",
+      "tag_name": "1.2.0.39-xaurora",
       "assets": [
         {
-          "name": "1.2.0.39-cpr-vcodex.bin",
-          "browser_download_url": "https://example.com/1.2.0.39-cpr-vcodex.bin",
+          "name": "1.2.0.39-xaurora.bin",
+          "browser_download_url": "https://example.com/1.2.0.39-xaurora.bin",
           "size": 6329000
         }
       ]
@@ -737,23 +737,23 @@ void testVcodexTagNamedAsset() {
 
   ASSERT_TRUE(p.foundTag());
   ASSERT_TRUE(p.foundFirmware());
-  ASSERT_STREQ(p.getTagName(), "1.2.0.39-cpr-vcodex");
-  ASSERT_STREQ(p.getFirmwareUrl(), "https://example.com/1.2.0.39-cpr-vcodex.bin");
+  ASSERT_STREQ(p.getTagName(), "1.2.0.39-xaurora");
+  ASSERT_STREQ(p.getFirmwareUrl(), "https://example.com/1.2.0.39-xaurora.bin");
   ASSERT_EQ(p.getFirmwareSize(), 6329000u);
 
   printf("  passed\n");
   PASS();
 }
 
-void testVcodexTagNamedAssetPreferredOverLegacy() {
-  printf("testVcodexTagNamedAssetPreferredOverLegacy...\n");
+void testXAuroraTagNamedAssetPreferredOverLegacy() {
+  printf("testXAuroraTagNamedAssetPreferredOverLegacy...\n");
 
   const char* json = R"({
-      "tag_name": "1.2.0.39-cpr-vcodex",
+      "tag_name": "1.2.0.39-xaurora",
       "assets": [
         {"name": "firmware.bin", "browser_download_url": "https://example.com/legacy.bin", "size": 1},
         {
-          "name": "1.2.0.39-cpr-vcodex.bin",
+          "name": "1.2.0.39-xaurora.bin",
           "browser_download_url": "https://example.com/tagged.bin",
           "size": 2
         }
@@ -849,14 +849,14 @@ void testFirmwareManifestParser() {
   printf("testFirmwareManifestParser...\n");
 
   const char* json = R"({
-      "name": "CPR-vCodex",
-      "version": "1.3.0.9-cpr-vcodex",
+      "name": "xAurora",
+      "version": "1.3.0.9-xaurora",
       "firmwareUrl": "firmware/firmware.bin",
-      "downloadUrl": "https://github.com/franssjz/cpr-vcodex/releases/download/1.3.0.9-cpr-vcodex/1.3.0.9-cpr-vcodex.bin",
+      "downloadUrl": "https://github.com/jhongarciab/xteink-aurora/releases/download/1.3.0.9-xaurora/1.3.0.9-xaurora.bin",
       "size": 6192336,
       "source": {
         "type": "github-release",
-        "tag": "1.3.0.9-cpr-vcodex"
+        "tag": "1.3.0.9-xaurora"
       },
       "builds": [
         {"chipFamily": "ESP32-C3", "parts": [{"path": "firmware.bin", "offset": 65536}]}
@@ -867,9 +867,9 @@ void testFirmwareManifestParser() {
   p.feed(json, strlen(json));
 
   ASSERT_TRUE(p.foundManifest());
-  ASSERT_STREQ(p.getVersion(), "1.3.0.9-cpr-vcodex");
+  ASSERT_STREQ(p.getVersion(), "1.3.0.9-xaurora");
   ASSERT_STREQ(p.getDownloadUrl(),
-               "https://github.com/franssjz/cpr-vcodex/releases/download/1.3.0.9-cpr-vcodex/1.3.0.9-cpr-vcodex.bin");
+               "https://github.com/jhongarciab/xteink-aurora/releases/download/1.3.0.9-xaurora/1.3.0.9-xaurora.bin");
   ASSERT_EQ(p.getFirmwareSize(), 6192336u);
 
   printf("  passed\n");
@@ -879,7 +879,7 @@ void testFirmwareManifestParser() {
 void testFirmwareManifestMissingDownloadUrl() {
   printf("testFirmwareManifestMissingDownloadUrl...\n");
 
-  const char* json = R"({"version":"1.3.0.9-cpr-vcodex","size":6192336})";
+  const char* json = R"({"version":"1.3.0.9-xaurora","size":6192336})";
 
   FirmwareManifestJsonParser p;
   p.feed(json, strlen(json));
@@ -922,8 +922,8 @@ int main() {
   testResetClearsState();
   testPartialAssetNameMatch();
   testFirmwareBinExactMatch();
-  testVcodexTagNamedAsset();
-  testVcodexTagNamedAssetPreferredOverLegacy();
+  testXAuroraTagNamedAsset();
+  testXAuroraTagNamedAssetPreferredOverLegacy();
   testLargeSize();
   testSizeZero();
   testMinimalValidJson();

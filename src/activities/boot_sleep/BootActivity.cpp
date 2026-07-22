@@ -30,7 +30,7 @@ void BootActivity::onEnter() {
 
   renderer.clearScreen();
   renderer.drawIcon(Logo, logoX, logoY, BOOT_LOGO_WIDTH, BOOT_LOGO_HEIGHT);
-  renderer.drawCenteredText(UI_10_FONT_ID, titleY, tr(STR_CPR_VCODEX), true, EpdFontFamily::BOLD);
+  renderer.drawCenteredText(UI_10_FONT_ID, titleY, tr(STR_XAURORA), true, EpdFontFamily::BOLD);
   renderer.drawCenteredText(SMALL_FONT_ID, subtitleY, tr(STR_BOOTING));
   renderer.drawCenteredText(SMALL_FONT_ID, pageHeight - 30, CROSSPOINT_VERSION);
   renderer.displayBuffer();
