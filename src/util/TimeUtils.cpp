@@ -3,6 +3,9 @@
 #include "CrossPointSettings.h"
 
 #include <Arduino.h>
+#include <HalGPIO.h>
+#include <Logging.h>
+#include <Wire.h>
 #include <esp_sntp.h>
 
 #include <algorithm>
@@ -15,6 +18,29 @@ namespace {
 constexpr uint32_t VALID_CLOCK_THRESHOLD = 1704067200UL;  // 2024-01-01 UTC
 bool syncedThisBoot = false;
 uint8_t configuredTimeZonePreset = UINT8_MAX;
+
+uint8_t fromBcd(const uint8_t value) { return static_cast<uint8_t>((value >> 4) * 10U + (value & 0x0FU)); }
+
+uint8_t toBcd(const uint8_t value) { return static_cast<uint8_t>(((value / 10U) << 4) | (value % 10U)); }
+
+bool readRtcRegisters(const uint8_t firstRegister, uint8_t* values, const uint8_t count) {
+  Wire.beginTransmission(I2C_ADDR_DS3231);
+  Wire.write(firstRegister);
+  if (Wire.endTransmission(false) != 0 ||
+      Wire.requestFrom(I2C_ADDR_DS3231, count, static_cast<uint8_t>(true)) != count) {
+    while (Wire.available()) Wire.read();
+    return false;
+  }
+  for (uint8_t i = 0; i < count; ++i) values[i] = Wire.read();
+  return true;
+}
+
+bool writeRtcRegisters(const uint8_t firstRegister, const uint8_t* values, const uint8_t count) {
+  Wire.beginTransmission(I2C_ADDR_DS3231);
+  Wire.write(firstRegister);
+  for (uint8_t i = 0; i < count; ++i) Wire.write(values[i]);
+  return Wire.endTransmission() == 0;
+}
 
 bool isLeapYear(const int year) { return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0); }
 
@@ -108,12 +134,83 @@ bool TimeUtils::syncTimeWithNtp(const uint32_t timeoutMs) {
 
     if ((syncCompleted || clockJumpedToValid) && currentClockValid) {
       syncedThisBoot = true;
+      updateHardwareRtcFromSystemTime();
       return true;
     }
     vTaskDelay(100 / portTICK_PERIOD_MS);
   }
 
   return false;
+}
+
+bool TimeUtils::restoreTimeFromHardwareRtc() {
+  if (!gpio.deviceIsX3()) return false;
+
+  uint8_t status = 0;
+  if (!readRtcRegisters(0x0F, &status, 1) || (status & 0x80U) != 0) {
+    LOG_DBG("TIME", "X3 RTC is unavailable or reports oscillator stop");
+    return false;
+  }
+
+  uint8_t regs[7] = {};
+  if (!readRtcRegisters(DS3231_SEC_REG, regs, sizeof(regs))) return false;
+
+  const unsigned second = fromBcd(regs[0] & 0x7FU);
+  const unsigned minute = fromBcd(regs[1] & 0x7FU);
+  unsigned hour = 0;
+  if ((regs[2] & 0x40U) != 0) {
+    hour = fromBcd(regs[2] & 0x1FU) % 12U;
+    if ((regs[2] & 0x20U) != 0) hour += 12U;
+  } else {
+    hour = fromBcd(regs[2] & 0x3FU);
+  }
+  const unsigned day = fromBcd(regs[4] & 0x3FU);
+  const unsigned month = fromBcd(regs[5] & 0x1FU);
+  const int year = 2000 + fromBcd(regs[6]) + ((regs[5] & 0x80U) != 0 ? 100 : 0);
+  if (second > 59 || minute > 59 || hour > 23 || month < 1 || month > 12 || day < 1 ||
+      day > getDaysInMonth(year, month)) {
+    LOG_DBG("TIME", "X3 RTC returned an invalid date");
+    return false;
+  }
+
+  const int64_t epoch = static_cast<int64_t>(daysFromCivil(year, month, day)) * 86400LL +
+                        static_cast<int64_t>(hour * 3600U + minute * 60U + second);
+  if (epoch < 0 || epoch > UINT32_MAX || !isClockValid(static_cast<uint32_t>(epoch))) return false;
+
+  timeval tv{};
+  tv.tv_sec = static_cast<time_t>(epoch);
+  if (settimeofday(&tv, nullptr) != 0) return false;
+  syncedThisBoot = true;
+  LOG_DBG("TIME", "System clock restored from X3 RTC");
+  return true;
+}
+
+bool TimeUtils::updateHardwareRtcFromSystemTime() {
+  if (!gpio.deviceIsX3()) return false;
+
+  const time_t now = time(nullptr);
+  if (now < 0 || !isClockValid(static_cast<uint32_t>(now))) return false;
+  tm utc = {};
+  if (gmtime_r(&now, &utc) == nullptr || utc.tm_year + 1900 < 2000 || utc.tm_year + 1900 > 2199) return false;
+
+  const int fullYear = utc.tm_year + 1900;
+  const uint8_t regs[7] = {
+      toBcd(static_cast<uint8_t>(utc.tm_sec)),
+      toBcd(static_cast<uint8_t>(utc.tm_min)),
+      toBcd(static_cast<uint8_t>(utc.tm_hour)),
+      toBcd(static_cast<uint8_t>(utc.tm_wday == 0 ? 7 : utc.tm_wday)),
+      toBcd(static_cast<uint8_t>(utc.tm_mday)),
+      static_cast<uint8_t>(toBcd(static_cast<uint8_t>(utc.tm_mon + 1)) | (fullYear >= 2100 ? 0x80U : 0U)),
+      toBcd(static_cast<uint8_t>(fullYear % 100)),
+  };
+  if (!writeRtcRegisters(DS3231_SEC_REG, regs, sizeof(regs))) return false;
+
+  uint8_t status = 0;
+  if (readRtcRegisters(0x0F, &status, 1)) {
+    status &= static_cast<uint8_t>(~0x80U);
+    writeRtcRegisters(0x0F, &status, 1);
+  }
+  return true;
 }
 
 bool TimeUtils::isClockValid() { return isClockValid(static_cast<uint32_t>(time(nullptr))); }
@@ -162,6 +259,7 @@ bool TimeUtils::setCurrentDate(const int year, const unsigned month, const unsig
   }
 
   syncedThisBoot = true;
+  updateHardwareRtcFromSystemTime();
   if (epochSeconds) {
     *epochSeconds = static_cast<uint32_t>(epoch);
   }

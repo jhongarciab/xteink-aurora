@@ -8,6 +8,8 @@ namespace TimeUtils {
 void configureTimezone();
 void stopNtp();
 bool syncTimeWithNtp(uint32_t timeoutMs = 5000);
+bool restoreTimeFromHardwareRtc();
+bool updateHardwareRtcFromSystemTime();
 bool isClockValid();
 bool isClockValid(uint32_t epochSeconds);
 uint32_t getAuthoritativeTimestamp();

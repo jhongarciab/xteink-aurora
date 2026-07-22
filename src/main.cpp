@@ -39,6 +39,7 @@
 #include "util/ButtonNavigator.h"
 #include "util/CprVcodexLogs.h"
 #include "util/ScreenshotUtil.h"
+#include "util/SilentTimeSync.h"
 
 MappedInputManager mappedInputManager(gpio);
 GfxRenderer renderer(display);
@@ -461,6 +462,10 @@ void setup() {
     BootRecovery::enterStage(BootRecovery::BootStage::State);
     APP_STATE.loadFromFile();
   }
+
+  const bool allowSilentWifiSync = !isSilentReboot && !manualSafeBoot && !skipStateLoad &&
+                                   wakeupReason == HalGPIO::WakeupReason::PowerButton;
+  SilentTimeSync::run(allowSilentWifiSync);
 
   if (skipReadingStatsLoad) {
     logSkip("Skipping reading stats load due to recovery mode");
