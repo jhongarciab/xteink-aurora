@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Xteink Aurora UI Preview</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="workspace">
+      <aside class="controls" aria-label="Preview controls">
+        <div class="brand">
+          <span class="brand-mark">A</span>
+          <div><strong>Xteink Aurora</strong><small>UI Preview</small></div>
+        </div>
+
+        <label>Device
+          <select id="device">
+            <option value="x3">Xteink X3 · 528×792</option>
+            <option value="x4">Xteink X4 · 480×800</option>
+          </select>
+        </label>
+
+        <label>Screen
+          <select id="screen">
+            <option value="home">Home</option>
+            <option value="stats">Reading stats</option>
+            <option value="sync">Time sync</option>
+            <option value="settings">Settings</option>
+          </select>
+        </label>
+
+        <label>Title
+          <input id="title" value="The Left Hand of Darkness" maxlength="42" />
+        </label>
+
+        <label>Selected row
+          <input id="selectedRow" type="range" min="0" max="5" value="0" />
+        </label>
+
+        <label class="check"><input id="darkMode" type="checkbox" /> Dark mode</label>
+        <label class="check"><input id="showGrid" type="checkbox" /> Layout grid</label>
+
+        <div class="button-row">
+          <button id="reset" type="button">Reset</button>
+          <button id="download" class="primary" type="button">Save layout</button>
+        </div>
+
+        <p class="hint">Edit the controls and switch screens. This models hierarchy and spacing; final font metrics and e-ink behavior still require the device.</p>
+      </aside>
+
+      <section class="stage" aria-label="E-reader preview">
+        <div class="stage-meta"><span id="resolution">528 × 792</span><span>Portrait · 1-bit preview</span></div>
+        <div id="deviceFrame" class="device-frame x3">
+          <div id="display" class="display" role="img" aria-label="Firmware screen preview"></div>
+          <div class="device-label">XTEINK</div>
+        </div>
+      </section>
+    </main>
+    <script src="preview.js"></script>
+  </body>
+</html>
