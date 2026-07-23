@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <cstring>
 #include <string>
 #include <vector>
 
@@ -793,7 +794,8 @@ void BaseTheme::fillPopupProgress(const GfxRenderer& renderer, const Rect& layou
 }
 
 void BaseTheme::drawStatusBar(GfxRenderer& renderer, const float bookProgress, const int currentPage,
-                              const int pageCount, std::string title, const int paddingBottom, const int textYOffset,
+                              const int pageCount, const int bookCurrentPage, const int bookPageCount, std::string title,
+                              const int paddingBottom, const int textYOffset,
                               const bool fillMargin) const {
   auto metrics = UITheme::getInstance().getMetrics();
   int orientedMarginTop, orientedMarginRight, orientedMarginBottom, orientedMarginLeft;
@@ -804,24 +806,36 @@ void BaseTheme::drawStatusBar(GfxRenderer& renderer, const float bookProgress, c
   const auto screenHeight = renderer.getScreenHeight();
   auto textY = screenHeight - UITheme::getInstance().getStatusBarHeight() - orientedMarginBottom - paddingBottom - 4;
   int progressTextWidth = 0;
+  const bool showBatteryPercentage =
+      SETTINGS.hideBatteryPercentage == CrossPointSettings::HIDE_BATTERY_PERCENTAGE::HIDE_NEVER;
 
-  if (SETTINGS.statusBarBookProgressPercentage || SETTINGS.statusBarChapterPageCount) {
-    // Right aligned text for progress counter
-    char progressStr[32];
-
-    if (SETTINGS.statusBarBookProgressPercentage && SETTINGS.statusBarChapterPageCount) {
-      snprintf(progressStr, sizeof(progressStr), "%d/%d  %.0f%%", currentPage, pageCount, bookProgress);
-    } else if (SETTINGS.statusBarBookProgressPercentage) {
-      snprintf(progressStr, sizeof(progressStr), "%.0f%%", bookProgress);
-    } else {
-      snprintf(progressStr, sizeof(progressStr), "%d/%d", currentPage, pageCount);
+  if (SETTINGS.statusBarBookProgressPercentage || SETTINGS.statusBarChapterPageCount || SETTINGS.statusBarBookPageCount) {
+    char pageStr[48] = "";
+    if (SETTINGS.statusBarChapterPageCount) snprintf(pageStr, sizeof(pageStr), "%d/%d", currentPage, pageCount);
+    if (SETTINGS.statusBarBookPageCount && bookPageCount > 0) {
+      char bookPageStr[32];
+      snprintf(bookPageStr, sizeof(bookPageStr), "%s%d/%d", pageStr[0] ? "  " : "", bookCurrentPage, bookPageCount);
+      strncat(pageStr, bookPageStr, sizeof(pageStr) - strlen(pageStr) - 1);
     }
-
-    progressTextWidth = renderer.getTextWidth(SMALL_FONT_ID, progressStr);
-    renderer.drawText(
-        SMALL_FONT_ID,
-        renderer.getScreenWidth() - metrics.statusBarHorizontalMargin - orientedMarginRight - progressTextWidth, textY,
-        progressStr);
+    char progressStr[64] = "";
+    const bool pageCountOnLeft = SETTINGS.statusBarPageCountPosition == CrossPointSettings::PAGE_COUNT_LEFT;
+    if (pageCountOnLeft && pageStr[0]) {
+      const int leftX = metrics.statusBarHorizontalMargin + orientedMarginLeft +
+                        (SETTINGS.statusBarBattery ? (showBatteryPercentage ? 55 : 25) : 0);
+      renderer.drawText(SMALL_FONT_ID, leftX, textY, pageStr);
+    } else {
+      snprintf(progressStr, sizeof(progressStr), "%s%s", pageStr, SETTINGS.statusBarBookProgressPercentage ? "  " : "");
+    }
+    if (SETTINGS.statusBarBookProgressPercentage) {
+      char percentStr[16];
+      snprintf(percentStr, sizeof(percentStr), "%.0f%%", bookProgress);
+      strncat(progressStr, percentStr, sizeof(progressStr) - strlen(progressStr) - 1);
+    }
+    if (progressStr[0]) {
+      progressTextWidth = renderer.getTextWidth(SMALL_FONT_ID, progressStr);
+      const int rightX = renderer.getScreenWidth() - metrics.statusBarHorizontalMargin - orientedMarginRight - progressTextWidth;
+      renderer.drawText(SMALL_FONT_ID, rightX, textY, progressStr);
+    }
   }
 
   // Draw Progress Bar
@@ -845,8 +859,6 @@ void BaseTheme::drawStatusBar(GfxRenderer& renderer, const float bookProgress, c
   }
 
   // Draw Battery
-  const bool showBatteryPercentage =
-      SETTINGS.hideBatteryPercentage == CrossPointSettings::HIDE_BATTERY_PERCENTAGE::HIDE_NEVER;
   if (SETTINGS.statusBarBattery) {
     GUI.drawBatteryLeft(renderer,
                         Rect{metrics.statusBarHorizontalMargin + orientedMarginLeft + 1, textY, metrics.batteryWidth,

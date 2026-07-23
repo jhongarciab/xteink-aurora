@@ -13,6 +13,12 @@
 class ZipFile;
 
 class Epub {
+  struct LocationSpineEntry {
+    uint32_t startLocation = 0;
+    uint32_t endLocation = 0;
+    uint32_t wordStart = 0;
+    uint32_t wordCount = 0;
+  };
   // the ncx file (EPUB 2)
   std::string tocNcxItem;
   // the nav file (EPUB 3)
@@ -29,6 +35,12 @@ class Epub {
   std::unique_ptr<CssParser> cssParser;
   // CSS files
   std::vector<std::string> cssFiles;
+  std::vector<LocationSpineEntry> locationSpine;
+  uint32_t totalLocations = 0;
+  uint32_t totalWords = 0;
+  uint32_t wordsPerReferencePage = 0;
+  uint32_t totalReferencePages = 0;
+  bool xLocationsLoaded = false;
 
   bool findContentOpfFile(std::string* contentOpfFile) const;
   bool parseContentOpf(BookMetadataCache::BookMetadata& bookMetadata, bool writeSpineEntries = true);
@@ -76,7 +88,13 @@ class Epub {
   int getSpineIndexForTextReference() const;
 
   size_t getBookSize() const;
+  bool hasStablePageNumbers() const;
+  bool resolveReferencePage(int currentSpineIndex, float currentSpineRead, uint32_t& currentPage,
+                            uint32_t& pageCount) const;
   float calculateProgress(int currentSpineIndex, float currentSpineRead) const;
   CssParser* getCssParser() const { return cssParser.get(); }
   int resolveHrefToSpineIndex(const std::string& href) const;
+
+ private:
+  bool loadXLocations();
 };

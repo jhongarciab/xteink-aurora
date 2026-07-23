@@ -113,10 +113,6 @@ const std::vector<SettingInfo>& getSettingsList() {
         SettingInfo::Toggle(StrId::STR_AUTO_SYNC_DAY, &CrossPointSettings::autoSyncDay, "autoSyncDay", StrId::STR_APPS),
         SettingInfo::Enum(StrId::STR_CHOOSE_WIFI, &CrossPointSettings::syncDayWifiChoice,
                           {StrId::STR_REFRESH_MODE_AUTO, StrId::STR_MANUAL}, "syncDayWifiChoice", StrId::STR_APPS),
-        SettingInfo::Enum(StrId::STR_SYNC_DAY_REMINDER_EVERY, &CrossPointSettings::syncDayReminderStarts,
-                          {StrId::STR_STATE_OFF, StrId::STR_NUM_10, StrId::STR_NUM_20, StrId::STR_NUM_30,
-                           StrId::STR_NUM_40, StrId::STR_NUM_50, StrId::STR_NUM_60},
-                          "syncDayReminderStarts", StrId::STR_APPS),
         SettingInfo::Enum(
             StrId::STR_DATE_FORMAT, &CrossPointSettings::dateFormat,
             {StrId::STR_DATE_FORMAT_DD_MM_YYYY, StrId::STR_DATE_FORMAT_MM_DD_YYYY, StrId::STR_DATE_FORMAT_YYYY_MM_DD},
@@ -230,6 +226,11 @@ const std::vector<SettingInfo>& getSettingsList() {
         // --- Status Bar Settings (web-only, uses StatusBarSettingsActivity) ---
         SettingInfo::Toggle(StrId::STR_CHAPTER_PAGE_COUNT, &CrossPointSettings::statusBarChapterPageCount,
                             "statusBarChapterPageCount", StrId::STR_CUSTOMISE_STATUS_BAR),
+        SettingInfo::Toggle(StrId::STR_BOOK_PAGE_COUNT, &CrossPointSettings::statusBarBookPageCount,
+                            "statusBarBookPageCount", StrId::STR_CUSTOMISE_STATUS_BAR),
+        SettingInfo::Enum(StrId::STR_PAGE_COUNT_POSITION, &CrossPointSettings::statusBarPageCountPosition,
+                          {StrId::STR_DIR_RIGHT, StrId::STR_DIR_LEFT}, "statusBarPageCountPosition",
+                          StrId::STR_CUSTOMISE_STATUS_BAR),
         SettingInfo::Toggle(StrId::STR_BOOK_PROGRESS_PERCENTAGE, &CrossPointSettings::statusBarBookProgressPercentage,
                             "statusBarBookProgressPercentage", StrId::STR_CUSTOMISE_STATUS_BAR),
         SettingInfo::Enum(StrId::STR_PROGRESS_BAR, &CrossPointSettings::statusBarProgressBar,

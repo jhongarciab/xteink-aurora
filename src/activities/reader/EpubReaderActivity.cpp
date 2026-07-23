@@ -11,6 +11,7 @@
 #include <MemoryBudget.h>
 
 #include <algorithm>
+#include <cmath>
 #include <iterator>
 #include <limits>
 
@@ -1633,6 +1634,14 @@ void EpubReaderActivity::renderStatusBar() const {
   const float pageCount = section->pageCount;
   const float sectionChapterProg = (pageCount > 0) ? (static_cast<float>(currentPage) / pageCount) : 0;
   const float bookProgress = epub->calculateProgress(currentSpineIndex, sectionChapterProg) * 100;
+  int bookCurrentPage = 0;
+  int bookPageCount = 0;
+  uint32_t referencePage = 0;
+  uint32_t referencePageCount = 0;
+  if (epub->resolveReferencePage(currentSpineIndex, sectionChapterProg, referencePage, referencePageCount)) {
+    bookCurrentPage = static_cast<int>(referencePage);
+    bookPageCount = static_cast<int>(referencePageCount);
+  }
 
   std::string title;
 
@@ -1661,7 +1670,7 @@ void EpubReaderActivity::renderStatusBar() const {
     title = epub->getTitle();
   }
 
-  GUI.drawStatusBar(renderer, bookProgress, currentPage, pageCount, title, 0, textYOffset);
+  GUI.drawStatusBar(renderer, bookProgress, currentPage, pageCount, bookCurrentPage, bookPageCount, title, 0, textYOffset);
 }
 
 void EpubReaderActivity::renderSectionLoadFailure() {

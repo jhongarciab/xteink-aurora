@@ -84,7 +84,8 @@ enum UIIcon {
   Trophy,
   Wifi,
   Hotspot,
-  Heart
+  Heart,
+  Chart
 };
 enum class KeyboardKeyType { Normal, Shift, Mode, Space, Del, Ok, Disabled };
 
@@ -166,7 +167,8 @@ class BaseTheme {
   virtual Rect drawPopup(const GfxRenderer& renderer, const char* message) const;
   virtual void fillPopupProgress(const GfxRenderer& renderer, const Rect& layout, const int progress) const;
   virtual void drawStatusBar(GfxRenderer& renderer, const float bookProgress, const int currentPage,
-                             const int pageCount, std::string title, const int paddingBottom = 0,
+                             const int pageCount, const int bookCurrentPage, const int bookPageCount, std::string title,
+                             const int paddingBottom = 0,
                              const int textYOffset = 0, const bool fillMargin = true) const;
   virtual void drawHelpText(const GfxRenderer& renderer, Rect rect, const char* label) const;
   virtual void drawTextField(const GfxRenderer& renderer, Rect rect, const int textWidth, bool cursorMode = false,

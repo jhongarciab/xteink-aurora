@@ -197,8 +197,8 @@ std::vector<HomeShortcutEntry> getHomeShortcutEntries(const bool hasOpdsServers)
 }
 
 // Builds the carousel shortcut list without truncating configured Home entries.
-// Settings is still injected if missing, and Apps remains pinned last so the
-// user always has an escape hatch even with aggressive shortcut customization.
+// Settings is still injected if missing, and Apps is kept adjacent to Settings
+// so the user always has an escape hatch even with aggressive customization.
 std::vector<HomeShortcutEntry> buildCarouselEntries(const std::vector<HomeShortcutEntry>& all) {
   std::vector<HomeShortcutEntry> result;
   HomeShortcutEntry appsEntry{nullptr, true};
@@ -228,7 +228,11 @@ std::vector<HomeShortcutEntry> buildCarouselEntries(const std::vector<HomeShortc
   }
 
   if (foundApps) {
-    result.push_back(appsEntry);
+    // The stats hub comes before Settings in the carousel shortcut row.
+    const auto settingsIt = std::find_if(result.begin(), result.end(), [](const HomeShortcutEntry& entry) {
+      return entry.definition && entry.definition->id == ShortcutId::Settings;
+    });
+    result.insert(settingsIt, appsEntry);
   }
   return result;
 }
@@ -249,7 +253,7 @@ std::string getHomeShortcutSubtitle(const HomeShortcutEntry& entry) {
 
 UIIcon getHomeShortcutIcon(const HomeShortcutEntry& entry) {
   if (entry.isAppsHub) {
-    return UIIcon::Book;
+    return UIIcon::Chart;
   }
   return entry.definition ? entry.definition->icon : UIIcon::Folder;
 }
@@ -336,7 +340,7 @@ uint8_t getCarouselBookProgressPercent(const RecentBook& recentBook) {
 uint32_t getCarouselFrameHash(const std::vector<RecentBook>& books, const int centerIdx, const int screenWidth,
                               const int screenHeight, const size_t bufferSize, const bool darkMode) {
   uint32_t hash = FNV1A_OFFSET;
-  hash = fnv1aString(hash, "lyra-carousel-frame-v7-progress-badge");
+  hash = fnv1aString(hash, "lyra-carousel-frame-v13-stats-identity");
   hash = fnv1aU32(hash, static_cast<uint32_t>(screenWidth));
   hash = fnv1aU32(hash, static_cast<uint32_t>(screenHeight));
   hash = fnv1aU32(hash, static_cast<uint32_t>(bufferSize));
@@ -353,6 +357,11 @@ uint32_t getCarouselFrameHash(const std::vector<RecentBook>& books, const int ce
     hash = fnv1aString(hash, book.coverBmpPath);
     hash = hashCarouselThumbState(hash, book);
     hash = fnv1aByte(hash, getCarouselBookProgressPercent(book));
+    const ReadingBookStats* stats = nullptr;
+    if (!book.bookId.empty()) stats = READING_STATS.findBook(book.bookId);
+    if (!stats && !book.path.empty()) stats = READING_STATS.findBook(book.path);
+    hash = fnv1aU32(hash, stats ? stats->sessions : 0U);
+    hash = fnv1aU32(hash, stats ? static_cast<uint32_t>(stats->totalReadingMs / 1000ULL) : 0U);
   }
 
   return hash;

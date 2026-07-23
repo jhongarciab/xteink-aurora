@@ -406,6 +406,9 @@ bool loadSettingsDirect(CrossPointSettings& s, const JsonDocument& doc, bool* ne
   }
 
   loadToggle("statusBarChapterPageCount", s.statusBarChapterPageCount);
+  loadToggle("statusBarBookPageCount", s.statusBarBookPageCount);
+  loadEnum("statusBarPageCountPosition", s.statusBarPageCountPosition,
+           CrossPointSettings::STATUS_BAR_PAGE_COUNT_POSITION_COUNT);
   loadToggle("statusBarBookProgressPercentage", s.statusBarBookProgressPercentage);
   loadEnum("statusBarProgressBar", s.statusBarProgressBar, CrossPointSettings::STATUS_BAR_PROGRESS_BAR_COUNT);
   loadEnum("statusBarProgressBarThickness", s.statusBarProgressBarThickness,
@@ -773,6 +776,8 @@ bool JsonSettingsIO::saveSettings(const CrossPointSettings& s, const char* path)
   doc["koSyncAutoPushOnClose"] = s.koSyncAutoPushOnClose;
 
   doc["statusBarChapterPageCount"] = s.statusBarChapterPageCount;
+  doc["statusBarBookPageCount"] = s.statusBarBookPageCount;
+  doc["statusBarPageCountPosition"] = s.statusBarPageCountPosition;
   doc["statusBarBookProgressPercentage"] = s.statusBarBookProgressPercentage;
   doc["statusBarProgressBar"] = s.statusBarProgressBar;
   doc["statusBarProgressBarThickness"] = s.statusBarProgressBarThickness;

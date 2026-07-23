@@ -11,8 +11,10 @@
 #include "fontIds.h"
 
 namespace {
-constexpr int MENU_ITEMS = 7;
+constexpr int MENU_ITEMS = 9;
 const StrId menuNames[MENU_ITEMS] = {StrId::STR_CHAPTER_PAGE_COUNT,
+                                     StrId::STR_BOOK_PAGE_COUNT,
+                                     StrId::STR_PAGE_COUNT_POSITION,
                                      StrId::STR_BOOK_PROGRESS_PERCENTAGE,
                                      StrId::STR_PROGRESS_BAR,
                                      StrId::STR_PROGRESS_BAR_THICKNESS,
@@ -43,6 +45,9 @@ void StatusBarSettingsActivity::onEnter() {
   selectedIndex = 0;
 
   // Clamp statusBarProgressBar and statusBarTitle in case of corrupt/migrated data
+  if (SETTINGS.statusBarPageCountPosition >= CrossPointSettings::STATUS_BAR_PAGE_COUNT_POSITION_COUNT) {
+    SETTINGS.statusBarPageCountPosition = CrossPointSettings::PAGE_COUNT_RIGHT;
+  }
   if (SETTINGS.statusBarProgressBar >= PROGRESS_BAR_ITEMS) {
     SETTINGS.statusBarProgressBar = CrossPointSettings::STATUS_BAR_PROGRESS_BAR::HIDE_PROGRESS;
   }
@@ -103,22 +108,26 @@ void StatusBarSettingsActivity::handleSelection() {
     // Chapter Page Count
     SETTINGS.statusBarChapterPageCount = (SETTINGS.statusBarChapterPageCount + 1) % 2;
   } else if (selectedIndex == 1) {
+    SETTINGS.statusBarBookPageCount = (SETTINGS.statusBarBookPageCount + 1) % 2;
+  } else if (selectedIndex == 2) {
+    SETTINGS.statusBarPageCountPosition = (SETTINGS.statusBarPageCountPosition + 1) % 2;
+  } else if (selectedIndex == 3) {
     // Book Progress %
     SETTINGS.statusBarBookProgressPercentage = (SETTINGS.statusBarBookProgressPercentage + 1) % 2;
-  } else if (selectedIndex == 2) {
+  } else if (selectedIndex == 4) {
     // Progress Bar
     SETTINGS.statusBarProgressBar = (SETTINGS.statusBarProgressBar + 1) % PROGRESS_BAR_ITEMS;
-  } else if (selectedIndex == 3) {
+  } else if (selectedIndex == 5) {
     // Progress Bar Thickness
     SETTINGS.statusBarProgressBarThickness =
         (SETTINGS.statusBarProgressBarThickness + 1) % PROGRESS_BAR_THICKNESS_ITEMS;
-  } else if (selectedIndex == 4) {
+  } else if (selectedIndex == 6) {
     // Chapter Title
     SETTINGS.statusBarTitle = (SETTINGS.statusBarTitle + 1) % TITLE_ITEMS;
-  } else if (selectedIndex == 5) {
+  } else if (selectedIndex == 7) {
     // Show Battery
     SETTINGS.statusBarBattery = (SETTINGS.statusBarBattery + 1) % 2;
-  } else if (selectedIndex == 6) {
+  } else if (selectedIndex == 8) {
     // XTC Status Bar
     SETTINGS.xtcStatusBarMode = (SETTINGS.xtcStatusBarMode + 1) % XTC_STATUS_BAR_ITEMS;
   }
@@ -145,16 +154,20 @@ void StatusBarSettingsActivity::render(RenderLock&&) {
         if (index == 0) {
           return SETTINGS.statusBarChapterPageCount ? tr(STR_SHOW) : tr(STR_HIDE);
         } else if (index == 1) {
-          return SETTINGS.statusBarBookProgressPercentage ? tr(STR_SHOW) : tr(STR_HIDE);
+          return SETTINGS.statusBarBookPageCount ? tr(STR_SHOW) : tr(STR_HIDE);
         } else if (index == 2) {
-          return I18N.get(progressBarNames[SETTINGS.statusBarProgressBar]);
+          return index == 2 && SETTINGS.statusBarPageCountPosition == CrossPointSettings::PAGE_COUNT_LEFT ? tr(STR_DIR_LEFT) : tr(STR_DIR_RIGHT);
         } else if (index == 3) {
-          return I18N.get(progressBarThicknessNames[SETTINGS.statusBarProgressBarThickness]);
+          return SETTINGS.statusBarBookProgressPercentage ? tr(STR_SHOW) : tr(STR_HIDE);
         } else if (index == 4) {
-          return I18N.get(titleNames[SETTINGS.statusBarTitle]);
+          return I18N.get(progressBarNames[SETTINGS.statusBarProgressBar]);
         } else if (index == 5) {
-          return SETTINGS.statusBarBattery ? tr(STR_SHOW) : tr(STR_HIDE);
+          return I18N.get(progressBarThicknessNames[SETTINGS.statusBarProgressBarThickness]);
         } else if (index == 6) {
+          return I18N.get(titleNames[SETTINGS.statusBarTitle]);
+        } else if (index == 7) {
+          return SETTINGS.statusBarBattery ? tr(STR_SHOW) : tr(STR_HIDE);
+        } else if (index == 8) {
           return I18N.get(xtcStatusBarNames[SETTINGS.xtcStatusBarMode]);
         } else {
           return tr(STR_HIDE);
@@ -173,7 +186,7 @@ void StatusBarSettingsActivity::render(RenderLock&&) {
     title = tr(STR_EXAMPLE_CHAPTER);
   }
 
-  GUI.drawStatusBar(renderer, 75, 8, 32, title, verticalPreviewPadding, 0, false);
+  GUI.drawStatusBar(renderer, 75, 8, 32, 50, 200, title, verticalPreviewPadding, 0, false);
 
   renderer.drawText(UI_10_FONT_ID, metrics.contentSidePadding,
                     renderer.getScreenHeight() - UITheme::getInstance().getStatusBarHeight() - verticalPreviewPadding -

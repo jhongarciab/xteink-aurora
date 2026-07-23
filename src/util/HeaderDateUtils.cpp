@@ -15,7 +15,7 @@
 
 namespace {
 void drawHeaderTopLine(const GfxRenderer& renderer, const ThemeMetrics& metrics, const int pageWidth,
-                       const std::string& dateText, const std::string& reminderText) {
+                       const std::string& dateText, const std::string& timeText, const std::string& reminderText) {
   const bool showBatteryPercentage =
       SETTINGS.hideBatteryPercentage != CrossPointSettings::HIDE_BATTERY_PERCENTAGE::HIDE_ALWAYS;
   int reminderX = metrics.contentSidePadding + metrics.batteryWidth + 12;
@@ -32,6 +32,11 @@ void drawHeaderTopLine(const GfxRenderer& renderer, const ThemeMetrics& metrics,
     renderer.drawText(SMALL_FONT_ID, dateX, metrics.topPadding + 5, dateText.c_str());
   }
 
+  if (!timeText.empty()) {
+    const int timeWidth = renderer.getTextWidth(SMALL_FONT_ID, timeText.c_str());
+    renderer.drawText(SMALL_FONT_ID, (pageWidth - timeWidth) / 2, metrics.topPadding + 5, timeText.c_str());
+  }
+
   if (!reminderText.empty()) {
     const int maxReminderWidth = std::max(0, dateX - reminderX - 12);
     if (maxReminderWidth > 0) {
@@ -45,7 +50,19 @@ std::string formatHeaderDateText(const uint32_t timestamp, const bool usedFallba
   const bool networkTimeIsCurrent =
       !usedFallback && TimeUtils::isClockValid(timestamp) && APP_STATE.lastNetworkTimeSyncDayOrdinal != 0 &&
       TimeUtils::getLocalDayOrdinal(timestamp) == APP_STATE.lastNetworkTimeSyncDayOrdinal;
-  return networkTimeIsCurrent ? TimeUtils::formatDateTime(timestamp, false) : TimeUtils::formatDate(timestamp, false);
+  return TimeUtils::formatDate(timestamp, false);
+}
+
+std::string formatHeaderTimeText(const uint32_t timestamp, const bool usedFallback) {
+  const bool networkTimeIsCurrent =
+      !usedFallback && TimeUtils::isClockValid(timestamp) && APP_STATE.lastNetworkTimeSyncDayOrdinal != 0 &&
+      TimeUtils::getLocalDayOrdinal(timestamp) == APP_STATE.lastNetworkTimeSyncDayOrdinal;
+  if (!networkTimeIsCurrent) return "";
+  time_t currentTime = static_cast<time_t>(timestamp);
+  tm localTime = {};
+  if (localtime_r(&currentTime, &localTime) == nullptr) return "";
+  return (localTime.tm_hour < 10 ? "0" : "") + std::to_string(localTime.tm_hour) + ":" +
+         (localTime.tm_min < 10 ? "0" : "") + std::to_string(localTime.tm_min);
 }
 }  // namespace
 
@@ -75,19 +92,22 @@ std::string HeaderDateUtils::getDisplayDateText() {
 }
 
 std::string HeaderDateUtils::getSyncDayReminderText() {
-  const uint8_t threshold = SETTINGS.getSyncDayReminderStartThreshold();
-  return APP_STATE.shouldShowSyncDayReminder(threshold) ? std::string(tr(STR_SYNC_DAY_REMINDER_MESSAGE)) : "";
+  return "";
 }
 
 void HeaderDateUtils::drawTopLine(GfxRenderer& renderer, const std::string& dateText) {
   const auto& metrics = UITheme::getInstance().getMetrics();
   const int pageWidth = renderer.getScreenWidth();
-  drawHeaderTopLine(renderer, metrics, pageWidth, dateText, getSyncDayReminderText());
+  const auto info = getDisplayDateInfo();
+  drawHeaderTopLine(renderer, metrics, pageWidth, dateText, formatHeaderTimeText(info.timestamp, info.usedFallback),
+                    getSyncDayReminderText());
 }
 
 void HeaderDateUtils::drawHeaderWithDate(GfxRenderer& renderer, const char* title, const char* subtitle) {
   const auto& metrics = UITheme::getInstance().getMetrics();
   const int pageWidth = renderer.getScreenWidth();
   GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, title, subtitle);
-  drawHeaderTopLine(renderer, metrics, pageWidth, getDisplayDateText(), getSyncDayReminderText());
+  const auto info = getDisplayDateInfo();
+  drawHeaderTopLine(renderer, metrics, pageWidth, getDisplayDateText(),
+                    formatHeaderTimeText(info.timestamp, info.usedFallback), getSyncDayReminderText());
 }

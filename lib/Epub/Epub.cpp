@@ -1,5 +1,8 @@
 #include "Epub.h"
 
+#include <ArduinoJson.h>
+
+#include <cstring>
 #include <FsHelpers.h>
 #include <HalStorage.h>
 #include <JpegToBmpConverter.h>
@@ -12,6 +15,12 @@
 #include "Epub/parsers/ContentOpfParser.h"
 #include "Epub/parsers/TocNavParser.h"
 #include "Epub/parsers/TocNcxParser.h"
+
+namespace {
+constexpr char kXLocationsPath[] = "META-INF/x-locations.json";
+constexpr size_t kXLocationsMaxBytes = 64 * 1024;
+constexpr uint32_t kDefaultReferenceWordsPerPage = 300;
+}
 
 bool Epub::findContentOpfFile(std::string* contentOpfFile) const {
   const auto containerPath = "META-INF/container.xml";
@@ -397,6 +406,7 @@ bool Epub::load(const bool buildIfMissing, const bool skipLoadingCss) {
         Storage.removeDir((cachePath + "/sections").c_str());
       }
     }
+    loadXLocations();
     LOG_DBG("EBP", "Loaded ePub: %s", filepath.c_str());
     return true;
   }
@@ -501,6 +511,7 @@ bool Epub::load(const bool buildIfMissing, const bool skipLoadingCss) {
     return false;
   }
 
+  loadXLocations();
   LOG_DBG("EBP", "Loaded ePub: %s", filepath.c_str());
   return true;
 }
@@ -517,6 +528,94 @@ bool Epub::clearCache() const {
   }
 
   LOG_DBG("EPB", "Cache cleared successfully");
+  return true;
+}
+
+bool Epub::loadXLocations() {
+  locationSpine.clear();
+  totalLocations = totalWords = wordsPerReferencePage = totalReferencePages = 0;
+  xLocationsLoaded = false;
+
+  size_t manifestSize = 0;
+  if (!getItemSize(kXLocationsPath, &manifestSize) || manifestSize == 0 || manifestSize > kXLocationsMaxBytes) {
+    return false;
+  }
+  size_t bytesRead = 0;
+  uint8_t* data = readItemContentsToBytes(kXLocationsPath, &bytesRead, true);
+  if (!data) return false;
+
+  JsonDocument filter;
+  JsonObject filterRoot = filter.to<JsonObject>();
+  filterRoot["format"] = true;
+  filterRoot["version"] = true;
+  filterRoot["totalLocations"] = true;
+  filterRoot["totalWords"] = true;
+  filterRoot["wordsPerReferencePage"] = true;
+  filterRoot["totalReferencePages"] = true;
+  JsonArray filterSpine = filterRoot["spine"].to<JsonArray>();
+  JsonObject filterEntry = filterSpine.add<JsonObject>();
+  filterEntry["index"] = true;
+  filterEntry["startLocation"] = true;
+  filterEntry["endLocation"] = true;
+  filterEntry["wordStart"] = true;
+  filterEntry["wordCount"] = true;
+
+  JsonDocument doc;
+  const DeserializationError error = deserializeJson(
+      doc, reinterpret_cast<const char*>(data), bytesRead, DeserializationOption::Filter(filter.as<JsonVariantConst>()));
+  free(data);
+  if (error) return false;
+
+  const char* format = doc["format"] | "";
+  const int version = doc["version"] | 0;
+  const uint32_t locations = doc["totalLocations"] | 0;
+  const uint32_t words = doc["totalWords"] | 0;
+  const uint32_t wordsPerPage = doc["wordsPerReferencePage"] | kDefaultReferenceWordsPerPage;
+  if ((strcmp(format, "x-locations") != 0 && strcmp(format, "crossink-locations") != 0) || version != 1 ||
+      locations == 0 || words == 0) {
+    return false;
+  }
+
+  const JsonArray spine = doc["spine"].as<JsonArray>();
+  const int spineCount = getSpineItemsCount();
+  locationSpine.assign(static_cast<size_t>(spineCount), {});
+  bool valid = false;
+  int ordinal = 0;
+  for (JsonObject entry : spine) {
+    const int index = entry["index"] | ordinal++;
+    const uint32_t start = entry["startLocation"] | 0;
+    const uint32_t end = entry["endLocation"] | 0;
+    if (index < 0 || index >= spineCount || start == 0 || end < start || end > locations) continue;
+    locationSpine[static_cast<size_t>(index)] = {start, end, entry["wordStart"] | 0, entry["wordCount"] | 0};
+    valid = true;
+  }
+  if (!valid) {
+    locationSpine.clear();
+    return false;
+  }
+  totalLocations = locations;
+  totalWords = words;
+  wordsPerReferencePage = wordsPerPage;
+  totalReferencePages = doc["totalReferencePages"] | 0;
+  if (totalReferencePages == 0) totalReferencePages = (totalWords + wordsPerReferencePage - 1) / wordsPerReferencePage;
+  xLocationsLoaded = totalReferencePages > 0;
+  return xLocationsLoaded;
+}
+
+bool Epub::hasStablePageNumbers() const {
+  return xLocationsLoaded && totalWords > 0 && wordsPerReferencePage > 0 && totalReferencePages > 0;
+}
+
+bool Epub::resolveReferencePage(const int spineIndex, const float spineProgress, uint32_t& currentPage,
+                                uint32_t& pageCount) const {
+  currentPage = pageCount = 0;
+  if (!hasStablePageNumbers() || spineIndex < 0 || spineIndex >= static_cast<int>(locationSpine.size())) return false;
+  const auto& entry = locationSpine[static_cast<size_t>(spineIndex)];
+  if (entry.wordCount == 0 || entry.wordStart >= totalWords) return false;
+  const float clamped = std::max(0.0f, std::min(1.0f, spineProgress));
+  const uint32_t completedWords = entry.wordStart + static_cast<uint32_t>(clamped * entry.wordCount);
+  currentPage = std::min<uint32_t>(completedWords / wordsPerReferencePage + 1, totalReferencePages);
+  pageCount = totalReferencePages;
   return true;
 }
 

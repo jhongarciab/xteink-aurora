@@ -17,6 +17,7 @@
 #include "components/UITheme.h"
 #include "components/icons/book.h"
 #include "components/icons/book24.h"
+#include "components/icons/chart.h"
 #include "components/icons/cover.h"
 #include "components/icons/file.h"
 #include "components/icons/file24.h"
@@ -174,6 +175,8 @@ const uint8_t* iconForName(UIIcon icon, int size) {
         return FolderIcon;
       case UIIcon::Book:
         return BookIcon;
+      case UIIcon::Chart:
+        return ChartIcon;
       case UIIcon::File:
         return FileIcon;
       case UIIcon::Recent:

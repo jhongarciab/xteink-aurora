@@ -230,6 +230,7 @@ class CrossPointSettings {
     OPDS_FILENAME_TITLE_AUTHOR = 1,
     OPDS_FILENAME_FORMAT_COUNT
   };
+  enum STATUS_BAR_PAGE_COUNT_POSITION { PAGE_COUNT_RIGHT = 0, PAGE_COUNT_LEFT = 1, STATUS_BAR_PAGE_COUNT_POSITION_COUNT };
   enum SHORTCUT_LOCATION { SHORTCUT_HOME = 0, SHORTCUT_APPS = 1, SHORTCUT_LOCATION_COUNT };
   enum HOME_BOOK_SOURCE { HOME_BOOKS_RECENTS = 0, HOME_BOOKS_FAVORITES = 1, HOME_BOOK_SOURCE_COUNT };
   enum SLEEP_IMAGE_ORDER { SLEEP_IMAGE_SHUFFLE = 0, SLEEP_IMAGE_SEQUENTIAL = 1, SLEEP_IMAGE_ORDER_COUNT };
@@ -248,6 +249,8 @@ class CrossPointSettings {
   // Status bar settings (statusBar retained for migration only)
   uint8_t statusBar = FULL;
   uint8_t statusBarChapterPageCount = 1;
+  uint8_t statusBarBookPageCount = 0;
+  uint8_t statusBarPageCountPosition = PAGE_COUNT_RIGHT;
   uint8_t statusBarBookProgressPercentage = 1;
   uint8_t statusBarProgressBar = HIDE_PROGRESS;
   uint8_t statusBarProgressBarThickness = PROGRESS_BAR_NORMAL;

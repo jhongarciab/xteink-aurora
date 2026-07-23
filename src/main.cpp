@@ -508,7 +508,6 @@ void setup() {
   const bool countUsefulStart = !isSilentReboot && !forceHomeBoot &&
                                 wakeupReason != HalGPIO::WakeupReason::AfterUSBPower &&
                                 wakeupReason != HalGPIO::WakeupReason::AfterFlash;
-  const uint8_t syncDayReminderThreshold = SETTINGS.getSyncDayReminderStartThreshold();
   BootRecovery::enterStage(BootRecovery::BootStage::RouteDecision);
 
   if (HalSystem::isRebootFromPanic() && !forceHomeBoot) {
@@ -525,7 +524,6 @@ void setup() {
 
     if (bootToHome) {
       if (countUsefulStart) {
-        APP_STATE.recordUsefulStart(syncDayReminderThreshold);
         APP_STATE.saveToFile();
       }
       activityManager.goHome();
@@ -535,7 +533,7 @@ void setup() {
       APP_STATE.openEpubPath = "";
       APP_STATE.readerActivityLoadCount++;
       if (countUsefulStart) {
-        APP_STATE.recordUsefulStart(syncDayReminderThreshold);
+        // Sync Day reminders are disabled; retain the boot state only.
       }
       APP_STATE.saveToFile();
       activityManager.goToReader(path);
