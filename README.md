@@ -594,7 +594,7 @@ Each packaged dev build now keeps the base firmware line and the local flash ide
 Practical values to look at:
 
 - base firmware line: `CrossPoint Reader 1.3.0`
-- current release build style: `1.3.0.35-xaurora`
+- current release build style: `1.3.0.40-xaurora`
 - packaged artifact style: `artifacts/<version>-xaurora.bin`
 
 The incremental `.bNNNN` suffix exists specifically to help distinguish newer flashes from older ones on real hardware.
@@ -664,10 +664,10 @@ Release publishing:
 - before tagging, run:
 
 ```powershell
-python scripts/pre_release_check.py --tag 1.3.0.35-xaurora
+python scripts/pre_release_check.py --tag 1.3.0.40-xaurora
 ```
 
-- push a stable tag named like `1.3.0.35-xaurora`
+- push a stable tag named like `1.3.0.40-xaurora`
 - the release workflow builds `gh_release`, validates that the packaged artifact
   name matches the tag, and attaches only the flashable `<tag>.bin` to the GitHub Release
 - tagged CI release builds derive the firmware release number from the tag, not
